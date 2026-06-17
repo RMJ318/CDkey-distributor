@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDKey分配系统</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+                <h1>🔑 CDKey分配系统</h1>
+                <p class="subtitle">基于FIFO（先进先出）逻辑</p>
+            </div>
+            <div style="text-align: right;">
+                <div id="userInfo" style="margin-bottom: 10px;">
+                    <span id="userName" style="color: #667eea; font-weight: bold;"></span>
+                    <span id="userRole" style="margin-left: 8px; padding: 4px 12px; background: #667eea; color: white; border-radius: 12px; font-size: 0.85em;"></span>
+                </div>
+                <button onclick="logout()" class="btn btn-secondary" style="padding: 8px 20px;">退出登录</button>
+            </div>
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-value" id="totalKeys">0</div>
+                <div class="stat-label">总CDKey数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="availableKeys">0</div>
+                <div class="stat-label">可用数量</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="usedKeys">0</div>
+                <div class="stat-label">已使用</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalRequests">0</div>
+                <div class="stat-label">请求次数</div>
+            </div>
+        </div>
+
+        <!-- Tab切换 -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('request')">📝 请求CDKey</button>
+            <button id="manageTab" class="tab-btn" onclick="switchTab('manage')" style="display:none;">⚙️ 管理CDKey</button>
+            <button class="tab-btn" onclick="switchTab('history')">📊 请求历史</button>
+        </div>
+
+        <!-- 请求CDKey面板 -->
+        <div id="request-panel" class="panel active">
+            <h2>请求CDKey</h2>
+            <div class="form-group">
+                <label for="reason">请求原因：</label>
+                <textarea
+                    id="reason"
+                    placeholder="请输入您的请求原因..."
+                    rows="4"
+                ></textarea>
+            </div>
+            <button onclick="requestCDKey()" class="btn btn-primary">获取CDKey</button>
+
+            <div id="result" class="result hidden"></div>
+        </div>
+
+        <!-- 管理CDKey面板（仅管理员可见） -->
+        <div id="manage-panel" class="panel">
+            <h2>添加CDKey</h2>
+
+            <div class="form-group">
+                <label for="singleCDKey">添加单个CDKey：</label>
+                <input
+                    type="text"
+                    id="singleCDKey"
+                    placeholder="输入CDKey"
+                >
+                <button onclick="addSingleCDKey()" class="btn btn-secondary">添加</button>
+            </div>
+
+            <div class="form-group">
+                <label for="batchCDKeys">批量添加CDKey（每行一个）：</label>
+                <textarea
+                    id="batchCDKeys"
+                    placeholder="KEY-001&#10;KEY-002&#10;KEY-003"
+                    rows="6"
+                ></textarea>
+                <button onclick="addBatchCDKeys()" class="btn btn-secondary">批量添加</button>
+            </div>
+
+            <h2 style="margin-top: 40px;">CDKey列表</h2>
+            <button onclick="loadAllCDKeys()" class="btn btn-secondary">刷新列表</button>
+            <div id="cdkey-list" style="margin-top: 20px;"></div>
+
+            <div class="danger-zone">
+                <h3>⚠️ 危险操作</h3>
+                <button onclick="clearAllData()" class="btn btn-danger">清空所有数据</button>
+            </div>
+        </div>
+
+        <!-- 请求历史面板 -->
+        <div id="history-panel" class="panel">
+            <h2>请求历史</h2>
+            <button onclick="loadHistory()" class="btn btn-secondary">刷新历史</button>
+            <div id="history-list" class="history-list"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
