@@ -16,12 +16,16 @@ function getCDKeyFilters() {
 }
 
 function renderCDKeyPagination(total, page, pageSize) {
+    const topPaginationDiv = document.getElementById('cdkey-pagination-top');
     const paginationDiv = document.getElementById('cdkey-pagination');
     const summaryDiv = document.getElementById('cdkey-pagination-summary');
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const canGoPrev = page > 1;
+    const canGoNext = page < totalPages;
 
     if (total === 0) {
         summaryDiv.textContent = '共 0 条';
+        if (topPaginationDiv) topPaginationDiv.innerHTML = '';
         paginationDiv.innerHTML = '';
         return;
     }
@@ -30,27 +34,34 @@ function renderCDKeyPagination(total, page, pageSize) {
     const end = Math.min(page * pageSize, total);
     summaryDiv.textContent = `显示 ${start}-${end} 条，共 ${total} 条`;
 
-    paginationDiv.innerHTML = `
+    const paginationMarkup = `
         <div class="text-sm text-on-surface-variant">
             第 ${page} / ${totalPages} 页
         </div>
         <div class="flex items-center gap-2">
             <button
-                onclick="goToCDKeyPage(${page - 1})"
-                class="px-4 py-2 rounded-lg text-sm border border-outline-variant ${page <= 1 ? 'bg-surface-container-low text-on-surface-variant cursor-not-allowed' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'}"
-                ${page <= 1 ? 'disabled' : ''}
+                type="button"
+                ${canGoPrev ? `onclick="goToCDKeyPage(${page - 1})"` : ''}
+                class="px-4 py-2 rounded-lg text-sm border border-outline-variant ${canGoPrev ? 'bg-surface-container text-on-surface hover:bg-surface-container-high' : 'bg-surface-container-low text-on-surface-variant cursor-not-allowed'}"
+                ${canGoPrev ? '' : 'disabled'}
             >
                 上一页
             </button>
             <button
-                onclick="goToCDKeyPage(${page + 1})"
-                class="px-4 py-2 rounded-lg text-sm border border-outline-variant ${page >= totalPages ? 'bg-surface-container-low text-on-surface-variant cursor-not-allowed' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'}"
-                ${page >= totalPages ? 'disabled' : ''}
+                type="button"
+                ${canGoNext ? `onclick="goToCDKeyPage(${page + 1})"` : ''}
+                class="px-4 py-2 rounded-lg text-sm border border-outline-variant ${canGoNext ? 'bg-surface-container text-on-surface hover:bg-surface-container-high' : 'bg-surface-container-low text-on-surface-variant cursor-not-allowed'}"
+                ${canGoNext ? '' : 'disabled'}
             >
                 下一页
             </button>
         </div>
     `;
+
+    if (topPaginationDiv) {
+        topPaginationDiv.innerHTML = paginationMarkup;
+    }
+    paginationDiv.innerHTML = paginationMarkup;
 }
 
 function changeCDKeyPageSize() {
