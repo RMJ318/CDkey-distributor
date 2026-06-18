@@ -133,11 +133,6 @@ async function requestCDKey() {
         return;
     }
 
-    if (reason.length < 10) {
-        alert('请提供更详细的说明（至少10个字符）');
-        return;
-    }
-
     const submitBtn = document.querySelector('#keyRequestForm button[type="submit"]');
     const originalHtml = submitBtn.innerHTML;
     submitBtn.disabled = true;
