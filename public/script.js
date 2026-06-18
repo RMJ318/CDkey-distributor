@@ -436,7 +436,8 @@ async function loadAllCDKeys() {
         if (endDate) url += `&endDate=${endDate}`;
 
         const response = await fetch(url);
-        const cdkeys = await response.json();
+        const data = await response.json();
+        const cdkeys = Array.isArray(data) ? data : (data.items || []);
 
         const listDiv = document.getElementById('cdkey-list');
 

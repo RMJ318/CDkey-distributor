@@ -168,8 +168,15 @@ app.get('/api/cdkeys', requireAuth, (req, res) => {
     endDate: req.query.endDate
   };
 
-  const cdkeys = db.getAllCDKeys(limit, offset, filters);
-  res.json(cdkeys);
+  const items = db.getAllCDKeys(limit, offset, filters);
+  const total = db.getCDKeyCount(filters);
+
+  res.json({
+    items,
+    total,
+    page: Math.floor(offset / limit) + 1,
+    pageSize: limit
+  });
 });
 
 // 获取请求历史（管理员看全部，普通用户只看自己的，支持搜索过滤）

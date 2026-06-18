@@ -57,6 +57,7 @@
             background: #dde2f3;
             border-radius: 10px;
         }
+
     </style>
 </head>
 <body class="text-on-surface">
@@ -310,12 +311,26 @@
                     <input type="date" id="endDate" class="h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm">
                 </div>
                 <div class="flex gap-2 mb-4">
-                    <button onclick="loadAllCDKeys()" class="px-4 py-2 bg-primary text-white rounded-lg text-sm">应用过滤</button>
+                    <button onclick="applyCDKeyFilters()" class="px-4 py-2 bg-primary text-white rounded-lg text-sm">应用过滤</button>
                     <button onclick="resetCDKeyFilters()" class="px-4 py-2 bg-surface-container text-on-surface rounded-lg text-sm">重置</button>
                     <button onclick="exportCDKeys()" class="px-4 py-2 bg-surface-container text-on-surface rounded-lg text-sm">📥 导出CSV</button>
                 </div>
+                <div class="flex items-center justify-between gap-4 mb-4 flex-wrap">
+                    <div class="flex items-center gap-2 text-sm text-on-surface-variant">
+                        <span>每页显示</span>
+                        <select id="cdkeyPageSize" onchange="changeCDKeyPageSize()" class="h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm text-on-surface">
+                            <option value="10">10</option>
+                            <option value="20" selected>20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span>条</span>
+                    </div>
+                    <div id="cdkey-pagination-summary" class="text-sm text-on-surface-variant"></div>
+                </div>
 
                 <div id="cdkey-list" class="overflow-auto custom-scrollbar"></div>
+                <div id="cdkey-pagination" class="flex items-center justify-between gap-4 mt-4 flex-wrap"></div>
             </div>
 
             <div class="bg-white rounded-xl shadow-sm border border-outline-variant p-8 mb-6">

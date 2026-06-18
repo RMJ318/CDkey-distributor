@@ -175,37 +175,30 @@ function getStats() {
 }
 
 // 获取所有CDKey列表（支持搜索和过滤）
-function getAllCDKeys(limit = 100, offset = 0, filters = {}) {
-  let query = `
-    SELECT id, code, is_used, created_at, used_at
-    FROM cdkeys
-    WHERE 1=1
-  `;
+function buildCDKeyWhereClause(filters = {}) {
+  let whereClause = ' WHERE 1=1';
 
-  // 搜索CDKey
   if (filters.codeSearch) {
-    query += ` AND code LIKE '%${filters.codeSearch}%'`;
+    whereClause += ` AND code LIKE '%${filters.codeSearch}%'`;
   }
 
-  // 按状态过滤
   if (filters.status === 'used') {
-    query += ` AND is_used = 1`;
+    whereClause += ' AND is_used = 1';
   } else if (filters.status === 'available') {
-    query += ` AND is_used = 0`;
+    whereClause += ' AND is_used = 0';
   }
 
-  // 日期范围过滤
   if (filters.startDate) {
-    query += ` AND date(created_at) >= '${filters.startDate}'`;
+    whereClause += ` AND date(created_at) >= '${filters.startDate}'`;
   }
   if (filters.endDate) {
-    query += ` AND date(created_at) <= '${filters.endDate}'`;
+    whereClause += ` AND date(created_at) <= '${filters.endDate}'`;
   }
 
-  query += ` ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+  return whereClause;
+}
 
-  const result = db.exec(query);
-
+function mapExecResult(result) {
   if (!result.length) return [];
 
   const columns = result[0].columns;
@@ -218,6 +211,35 @@ function getAllCDKeys(limit = 100, offset = 0, filters = {}) {
     });
     return obj;
   });
+}
+
+function getAllCDKeys(limit = 100, offset = 0, filters = {}) {
+  const whereClause = buildCDKeyWhereClause(filters);
+  const query = `
+    SELECT id, code, is_used, created_at, used_at
+    FROM cdkeys
+    ${whereClause}
+    ORDER BY created_at DESC
+    LIMIT ${limit} OFFSET ${offset}
+  `;
+
+  return mapExecResult(db.exec(query));
+}
+
+function getCDKeyCount(filters = {}) {
+  const whereClause = buildCDKeyWhereClause(filters);
+  const query = `
+    SELECT COUNT(*) AS total
+    FROM cdkeys
+    ${whereClause}
+  `;
+  const result = db.exec(query);
+
+  if (!result.length || !result[0].values.length) {
+    return 0;
+  }
+
+  return result[0].values[0][0];
 }
 
 // 获取请求历史（支持搜索和过滤）
@@ -555,6 +577,7 @@ module.exports = {
   getCDKeyWithUser,
   getStats,
   getAllCDKeys,
+  getCDKeyCount,
   getRequestHistory,
   getUserRequestHistory,
   clearAllData,

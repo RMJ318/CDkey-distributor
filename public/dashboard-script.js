@@ -2,6 +2,78 @@
 // 这个文件被dashboard.html使用，所有函数都需要手动调用
 
 let generatedCDKey = ''; // 存储生成的CDKey用于复制
+let cdkeyCurrentPage = 1;
+let cdkeyPageSize = 20;
+let cdkeyTotal = 0;
+
+function getCDKeyFilters() {
+    return {
+        codeSearch: document.getElementById('cdkeySearch').value,
+        status: document.getElementById('statusFilter').value,
+        startDate: document.getElementById('startDate').value,
+        endDate: document.getElementById('endDate').value
+    };
+}
+
+function renderCDKeyPagination(total, page, pageSize) {
+    const paginationDiv = document.getElementById('cdkey-pagination');
+    const summaryDiv = document.getElementById('cdkey-pagination-summary');
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+    if (total === 0) {
+        summaryDiv.textContent = '共 0 条';
+        paginationDiv.innerHTML = '';
+        return;
+    }
+
+    const start = (page - 1) * pageSize + 1;
+    const end = Math.min(page * pageSize, total);
+    summaryDiv.textContent = `显示 ${start}-${end} 条，共 ${total} 条`;
+
+    paginationDiv.innerHTML = `
+        <div class="text-sm text-on-surface-variant">
+            第 ${page} / ${totalPages} 页
+        </div>
+        <div class="flex items-center gap-2">
+            <button
+                onclick="goToCDKeyPage(${page - 1})"
+                class="px-4 py-2 rounded-lg text-sm border border-outline-variant ${page <= 1 ? 'bg-surface-container-low text-on-surface-variant cursor-not-allowed' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'}"
+                ${page <= 1 ? 'disabled' : ''}
+            >
+                上一页
+            </button>
+            <button
+                onclick="goToCDKeyPage(${page + 1})"
+                class="px-4 py-2 rounded-lg text-sm border border-outline-variant ${page >= totalPages ? 'bg-surface-container-low text-on-surface-variant cursor-not-allowed' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'}"
+                ${page >= totalPages ? 'disabled' : ''}
+            >
+                下一页
+            </button>
+        </div>
+    `;
+}
+
+function changeCDKeyPageSize() {
+    const pageSizeSelect = document.getElementById('cdkeyPageSize');
+    cdkeyPageSize = parseInt(pageSizeSelect.value, 10) || 20;
+    cdkeyCurrentPage = 1;
+    loadAllCDKeys();
+}
+
+function applyCDKeyFilters() {
+    cdkeyCurrentPage = 1;
+    loadAllCDKeys();
+}
+
+function goToCDKeyPage(page) {
+    const totalPages = Math.max(1, Math.ceil(cdkeyTotal / cdkeyPageSize));
+    if (page < 1 || page > totalPages || page === cdkeyCurrentPage) {
+        return;
+    }
+
+    cdkeyCurrentPage = page;
+    loadAllCDKeys();
+}
 
 // 登出
 async function logout() {
@@ -383,25 +455,38 @@ function formatDate(dateString) {
 }
 
 // 加载所有CDKey列表
-async function loadAllCDKeys() {
+async function loadAllCDKeys(page = cdkeyCurrentPage) {
     try {
-        const codeSearch = document.getElementById('cdkeySearch').value;
-        const status = document.getElementById('statusFilter').value;
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
+        const { codeSearch, status, startDate, endDate } = getCDKeyFilters();
+        const listDiv = document.getElementById('cdkey-list');
+        const pageSizeSelect = document.getElementById('cdkeyPageSize');
+        if (pageSizeSelect) {
+            pageSizeSelect.value = String(cdkeyPageSize);
+        }
 
-        let url = '/api/cdkeys?limit=100';
+        cdkeyCurrentPage = Math.max(1, page);
+        const offset = (cdkeyCurrentPage - 1) * cdkeyPageSize;
+
+        let url = `/api/cdkeys?limit=${cdkeyPageSize}&offset=${offset}`;
         if (codeSearch) url += `&codeSearch=${encodeURIComponent(codeSearch)}`;
         if (status) url += `&status=${status}`;
         if (startDate) url += `&startDate=${startDate}`;
         if (endDate) url += `&endDate=${endDate}`;
 
         const response = await fetch(url);
-        const cdkeys = await response.json();
+        const data = await response.json();
+        const cdkeys = Array.isArray(data) ? data : (data.items || []);
+        cdkeyTotal = Array.isArray(data) ? cdkeys.length : (data.total || 0);
 
-        const listDiv = document.getElementById('cdkey-list');
+        const totalPages = Math.max(1, Math.ceil(cdkeyTotal / cdkeyPageSize));
+        if (cdkeyCurrentPage > totalPages) {
+            cdkeyCurrentPage = totalPages;
+            return loadAllCDKeys(cdkeyCurrentPage);
+        }
+
         if (cdkeys.length === 0) {
             listDiv.innerHTML = '<p class="text-center text-on-surface-variant py-10">没有找到匹配的CDKey</p>';
+            renderCDKeyPagination(cdkeyTotal, cdkeyCurrentPage, cdkeyPageSize);
             return;
         }
 
@@ -433,6 +518,7 @@ async function loadAllCDKeys() {
                 </tbody>
             </table>
         `;
+        renderCDKeyPagination(cdkeyTotal, cdkeyCurrentPage, cdkeyPageSize);
     } catch (error) {
         console.error('加载CDKey列表失败:', error);
     }
@@ -443,6 +529,7 @@ function resetCDKeyFilters() {
     document.getElementById('statusFilter').value = '';
     document.getElementById('startDate').value = '';
     document.getElementById('endDate').value = '';
+    cdkeyCurrentPage = 1;
     loadAllCDKeys();
 }
 
@@ -470,7 +557,7 @@ async function deleteCDKey(id) {
 
         if (data.success) {
             alert('✅ CDKey已删除');
-            loadAllCDKeys();
+            loadAllCDKeys(cdkeyCurrentPage);
             loadStats();
         } else {
             alert('❌ 删除失败: ' + data.error);
