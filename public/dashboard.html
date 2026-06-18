@@ -39,6 +39,7 @@
         body {
             font-family: 'Hanken Grotesk', sans-serif;
             background-color: #f9f9ff;
+            overflow-y: scroll; /* 强制显示滚动条 */
         }
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -101,55 +102,94 @@
 
     <!-- Main Content -->
     <main class="ml-[240px] p-8">
-        <!-- Unified Info Bar -->
-        <section class="bg-gradient-to-r from-primary/5 via-surface to-secondary/5 rounded-xl p-5 mb-8 border border-outline-variant/30 shadow-sm">
-            <div class="grid grid-cols-12 gap-4 items-center">
-                <!-- User Welcome -->
-                <div class="col-span-3 flex items-center gap-3">
-                    <div class="w-11 h-11 rounded-full violet-gradient flex items-center justify-center text-white shadow-lg flex-shrink-0">
-                        <span class="material-symbols-outlined text-xl">person</span>
-                    </div>
-                    <div class="min-w-0">
-                        <h2 class="text-base font-bold text-on-surface truncate">您好，<span id="welcomeUserName">用户</span></h2>
-                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold inline-block" id="welcomeUserRole">标准用户</span>
-                    </div>
+        <!-- Stats Cards (for Manage & History views) -->
+        <div id="statsCards" class="grid grid-cols-4 gap-4 mb-8 hidden">
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="material-symbols-outlined text-blue-500 text-[32px]">inventory</span>
                 </div>
-
-                <!-- Divider -->
-                <div class="w-px h-12 bg-outline-variant"></div>
-
-                <!-- Stats Grid -->
-                <div class="col-span-5 grid grid-cols-3 gap-3">
-                    <div class="text-center">
-                        <p class="text-on-surface-variant text-[10px] mb-0.5">总密钥</p>
-                        <p class="text-xl font-bold text-on-surface" id="totalKeys">0</p>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-on-surface-variant text-[10px] mb-0.5">可用</p>
-                        <p class="text-xl font-bold text-success" id="availableKeys">0</p>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-on-surface-variant text-[10px] mb-0.5">已使用</p>
-                        <p class="text-xl font-bold text-error" id="usedKeys">0</p>
-                    </div>
-                </div>
-
-                <!-- Divider -->
-                <div class="w-px h-12 bg-outline-variant"></div>
-
-                <!-- Quota -->
-                <div class="col-span-2 text-center">
-                    <p class="text-on-surface-variant text-[10px] mb-0.5">本月配额</p>
-                    <div class="flex items-baseline justify-center gap-1">
-                        <span class="text-xl font-bold text-primary" id="quotaRemaining">-</span>
-                        <span class="text-on-surface-variant text-xs">/ <span id="quotaTotal">-</span></span>
-                    </div>
+                <div>
+                    <div class="text-4xl font-bold mb-1 text-blue-600" id="totalKeys">0</div>
+                    <div class="text-sm text-gray-600">总密钥数</div>
                 </div>
             </div>
-        </section>
+
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="material-symbols-outlined text-green-500 text-[32px]">check_circle</span>
+                </div>
+                <div>
+                    <div class="text-4xl font-bold mb-1 text-green-600" id="availableKeys">0</div>
+                    <div class="text-sm text-gray-600">可用数量</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="material-symbols-outlined text-orange-500 text-[32px]">block</span>
+                </div>
+                <div>
+                    <div class="text-4xl font-bold mb-1 text-orange-600" id="usedKeys">0</div>
+                    <div class="text-sm text-gray-600">已使用</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="material-symbols-outlined text-purple-500 text-[32px]">trending_up</span>
+                </div>
+                <div>
+                    <div class="text-4xl font-bold mb-1 text-purple-600" id="totalRequests">0</div>
+                    <div class="text-sm text-gray-600">请求次数</div>
+                </div>
+            </div>
+        </div>
 
         <!-- Request View -->
         <div id="request-view" class="view">
+            <!-- Welcome Bar with Stats -->
+            <section class="bg-gradient-to-r from-primary/5 via-surface to-secondary/5 rounded-xl p-6 mb-8 border border-outline-variant/30 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <!-- User Info -->
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full violet-gradient flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                            <span class="material-symbols-outlined text-xl">person</span>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-on-surface" id="welcomeUserName">管理员</h2>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold inline-block" id="welcomeUserRole">系统管理员</span>
+                        </div>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="flex items-center gap-8">
+                        <div class="text-center">
+                            <p class="text-xs text-on-surface-variant mb-1">总密钥</p>
+                            <p class="text-2xl font-bold text-blue-600" id="requestTotalKeys">0</p>
+                        </div>
+                        <div class="w-px h-12 bg-outline-variant"></div>
+                        <div class="text-center">
+                            <p class="text-xs text-on-surface-variant mb-1">可用</p>
+                            <p class="text-2xl font-bold text-green-600" id="requestAvailableKeys">0</p>
+                        </div>
+                        <div class="w-px h-12 bg-outline-variant"></div>
+                        <div class="text-center">
+                            <p class="text-xs text-on-surface-variant mb-1">已使用</p>
+                            <p class="text-2xl font-bold text-orange-600" id="requestUsedKeys">0</p>
+                        </div>
+                        <div class="w-px h-12 bg-outline-variant"></div>
+                        <div class="text-center">
+                            <p class="text-xs text-on-surface-variant mb-1">请求数</p>
+                            <p class="text-2xl font-bold text-purple-600" id="requestTotalRequests">0</p>
+                        </div>
+                        <div class="w-px h-12 bg-outline-variant"></div>
+                        <div class="text-center">
+                            <p class="text-xs text-on-surface-variant mb-1">本月配额</p>
+                            <p class="text-2xl font-bold text-primary"><span id="quotaRemaining">-</span><span class="text-sm text-on-surface-variant">/<span id="quotaTotal">-</span></span></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
             <!-- Minimalist Request Section -->
             <section class="max-w-2xl mx-auto">
                 <!-- Simple Header -->
@@ -198,50 +238,60 @@
 
         <!-- Manage View (Admin Only) -->
         <div id="manage-view" class="view hidden">
-            <div class="bg-white rounded-xl shadow-sm border border-outline-variant p-8 mb-6">
-                <h2 class="text-2xl font-bold text-on-surface mb-6">添加CDKey</h2>
-
-                <div class="grid grid-cols-2 gap-6 mb-6">
-                    <div>
-                        <label class="block text-sm font-semibold text-on-surface-variant mb-2">单个添加</label>
-                        <div class="flex gap-2">
-                            <input
-                                id="singleCDKey"
-                                type="text"
-                                class="flex-1 h-12 px-4 bg-surface-container-lowest border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                placeholder="输入CDKey"
-                            />
-                            <button onclick="addSingleCDKey()" class="px-6 bg-primary text-white rounded-lg hover:bg-primary-container transition-colors whitespace-nowrap">添加</button>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-on-surface-variant mb-2">CSV导入</label>
-                        <div class="flex gap-2">
-                            <input
-                                id="csvFileInput"
-                                type="file"
-                                accept=".csv"
-                                class="hidden"
-                                onchange="handleCSVUpload(event)"
-                            />
-                            <button onclick="document.getElementById('csvFileInput').click()" class="flex-1 h-12 px-4 bg-surface-container-lowest border-2 border-dashed border-outline-variant rounded-lg hover:border-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
-                                <span class="material-symbols-outlined">upload_file</span>
-                                <span>选择CSV文件</span>
-                            </button>
-                        </div>
-                        <p class="text-xs text-on-surface-variant mt-1">支持包含code列的CSV</p>
-                    </div>
+            <div class="bg-white rounded-xl shadow-sm border border-outline-variant mb-6 overflow-hidden">
+                <div class="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors" onclick="toggleAddSection()">
+                    <h2 class="text-xl font-bold text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">add_box</span>
+                        添加CDKey
+                    </h2>
+                    <span class="material-symbols-outlined text-gray-500 transition-transform" id="addSectionIcon">expand_more</span>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-semibold text-on-surface-variant mb-2">批量添加（每行一个）</label>
-                    <textarea
-                        id="batchCDKeys"
-                        class="w-full h-32 p-4 bg-surface-container-lowest border border-outline-variant rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary mb-3"
-                        placeholder="KEY-001&#10;KEY-002&#10;KEY-003"
-                    ></textarea>
-                    <button onclick="addBatchCDKeys()" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-container transition-colors">批量添加</button>
+                <div id="addSectionContent" class="hidden border-t border-outline-variant">
+                    <div class="p-6">
+                        <div class="grid grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-on-surface-variant mb-2">单个添加</label>
+                                <div class="flex gap-2">
+                                    <input
+                                        id="singleCDKey"
+                                        type="text"
+                                        class="flex-1 h-12 px-4 bg-surface-container-lowest border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                        placeholder="输入CDKey"
+                                    />
+                                    <button onclick="addSingleCDKey()" class="px-6 bg-primary text-white rounded-lg hover:bg-primary-container transition-colors whitespace-nowrap">添加</button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-on-surface-variant mb-2">CSV导入</label>
+                                <div class="flex gap-2">
+                                    <input
+                                        id="csvFileInput"
+                                        type="file"
+                                        accept=".csv"
+                                        class="hidden"
+                                        onchange="handleCSVUpload(event)"
+                                    />
+                                    <button onclick="document.getElementById('csvFileInput').click()" class="flex-1 h-12 px-4 bg-surface-container-lowest border-2 border-dashed border-outline-variant rounded-lg hover:border-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
+                                        <span class="material-symbols-outlined">upload_file</span>
+                                        <span>选择CSV文件</span>
+                                    </button>
+                                </div>
+                                <p class="text-xs text-on-surface-variant mt-1">支持包含code列的CSV</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-on-surface-variant mb-2">批量添加（每行一个）</label>
+                            <textarea
+                                id="batchCDKeys"
+                                class="w-full h-32 p-4 bg-surface-container-lowest border border-outline-variant rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary mb-3"
+                                placeholder="KEY-001&#10;KEY-002&#10;KEY-003"
+                            ></textarea>
+                            <button onclick="addBatchCDKeys()" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-container transition-colors">批量添加</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -370,14 +420,10 @@
                         本月：${data.quota.monthlyUsed}/${data.quota.monthlyQuota}
                     `;
 
-                    // 顶部信息栏配额
+                    // 欢迎栏配额
                     const remaining = data.quota.monthlyQuota - data.quota.monthlyUsed;
                     document.getElementById('quotaRemaining').textContent = remaining;
                     document.getElementById('quotaTotal').textContent = data.quota.monthlyQuota;
-
-                    // 极简页面配额
-                    document.getElementById('simpleQuotaRemaining').textContent = remaining;
-                    document.getElementById('simpleQuotaTotal').textContent = data.quota.monthlyQuota;
                 }
 
                 // 如果是管理员，显示管理面板
@@ -402,6 +448,20 @@
             requestCDKey();
         });
 
+        // 切换添加CDKey区域
+        function toggleAddSection() {
+            const content = document.getElementById('addSectionContent');
+            const icon = document.getElementById('addSectionIcon');
+
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
         // 视图切换
         function switchView(viewName) {
             document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
@@ -413,6 +473,14 @@
             document.getElementById(`${viewName}-view`).classList.remove('hidden');
             event.target.closest('.nav-link').classList.add('violet-gradient', 'text-white');
             event.target.closest('.nav-link').classList.remove('text-on-surface-variant', 'hover:bg-surface-container-high');
+
+            // 显示/隐藏KPI卡片
+            const statsCards = document.getElementById('statsCards');
+            if (viewName === 'request') {
+                statsCards.classList.add('hidden');
+            } else {
+                statsCards.classList.remove('hidden');
+            }
 
             if (viewName === 'history') loadHistory();
             if (viewName === 'manage') {

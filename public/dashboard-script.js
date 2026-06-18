@@ -20,10 +20,22 @@ async function loadStats() {
         const response = await fetch('/api/stats');
         const stats = await response.json();
 
+        // 更新KPI卡片（管理和历史页面）
         document.getElementById('totalKeys').textContent = stats.total;
         document.getElementById('availableKeys').textContent = stats.available;
         document.getElementById('usedKeys').textContent = stats.used;
         document.getElementById('totalRequests').textContent = stats.totalRequests;
+
+        // 更新请求页欢迎栏中的数据
+        const requestTotal = document.getElementById('requestTotalKeys');
+        const requestAvailable = document.getElementById('requestAvailableKeys');
+        const requestUsed = document.getElementById('requestUsedKeys');
+        const requestRequests = document.getElementById('requestTotalRequests');
+
+        if (requestTotal) requestTotal.textContent = stats.total;
+        if (requestAvailable) requestAvailable.textContent = stats.available;
+        if (requestUsed) requestUsed.textContent = stats.used;
+        if (requestRequests) requestRequests.textContent = stats.totalRequests;
     } catch (error) {
         console.error('加载统计信息失败:', error);
     }

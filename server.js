@@ -30,9 +30,9 @@ app.get('/', (req, res) => {
   if (req.session.user) {
     // 根据用户角色重定向到不同的dashboard
     if (req.session.user.role === 'admin') {
-      res.redirect('/dashboard.html');  // 管理员 → v1完整版Dashboard
+      res.redirect('/dashboard.html');  // 管理员 → dashboard.html
     } else {
-      res.redirect('/dashboard-v2.html');  // 普通用户 → v2极简版Dashboard
+      res.redirect('/dashboard-v2.html');  // 普通用户 → v2极简版
     }
   } else {
     res.redirect('/login-new.html');  // 新版登录
