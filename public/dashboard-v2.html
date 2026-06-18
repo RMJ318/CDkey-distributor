@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html class="light" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Violet Protocol - CDKey申请系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@400,0..1&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#667eea',
+                        'primary-dark': '#5568d3',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f9f9ff;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .nav-tab {
+            position: relative;
+        }
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-50">
+        <div class="max-w-7xl mx-auto px-6 flex items-center justify-between h-full">
+            <!-- Logo -->
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white text-[20px]" style="font-variation-settings: 'FILL' 1;">vpn_key</span>
+                </div>
+                <span class="text-lg font-bold text-gray-900">Violet Protocol</span>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <div class="flex items-center gap-1">
+                <button onclick="switchTab('request')" class="nav-tab active px-4 py-2 text-sm font-medium text-gray-900 hover:text-primary transition-colors" id="requestTab">
+                    申请CDKey
+                </button>
+                <button onclick="switchTab('history')" class="nav-tab px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary transition-colors" id="historyTab">
+                    申请历史
+                </button>
+            </div>
+
+            <!-- User Menu -->
+            <div class="relative flex items-center gap-3">
+                <div class="text-right">
+                    <div class="text-sm font-medium text-gray-900" id="topUserName">用户</div>
+                    <div class="text-xs text-gray-500" id="topUserRole">-</div>
+                </div>
+                <button onclick="toggleUserMenu()" class="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white font-medium text-sm">
+                    <span id="userInitial">U</span>
+                </button>
+
+                <!-- User Dropdown Menu -->
+                <div id="userMenu" class="hidden absolute right-0 top-12 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <div class="px-4 py-2 border-b border-gray-100">
+                        <div class="text-sm font-medium text-gray-900" id="menuUserName">用户</div>
+                        <div class="text-xs text-gray-500" id="menuQuota">配额: -/-</div>
+                    </div>
+                    <button onclick="logout()" class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px]">logout</span>
+                        <span>退出登录</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-16">
+        <!-- Request View -->
+        <div id="requestView" class="view">
+            <div class="max-w-[700px] mx-auto px-6 py-16">
+                <!-- Page Title -->
+                <div class="text-center mb-12">
+                    <h1 class="text-4xl font-bold text-gray-900 mb-3">申请 CDKey</h1>
+                    <p class="text-gray-600">填写申请原因即可快速获取密钥</p>
+                </div>
+
+                <!-- Request Form -->
+                <form id="requestForm" class="mb-16">
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-900 mb-3">申请原因</label>
+                        <textarea
+                            id="reason"
+                            class="w-full h-32 px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none resize-none text-gray-900 placeholder-gray-400"
+                            placeholder="请简要说明申请理由（例如：客户端配置、系统测试等）..."
+                        ></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="text-sm text-gray-600">
+                            💜 本月剩余配额: <span class="font-semibold text-primary" id="quotaDisplay">-/-</span>
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="w-full h-14 bg-gradient-to-r from-primary to-purple-600 text-white font-semibold text-lg rounded-xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+                    >
+                        <span class="material-symbols-outlined">key</span>
+                        <span>获取 CDKey</span>
+                    </button>
+                </form>
+
+                <!-- Recent Records -->
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold text-gray-900">最近申请记录</h2>
+                        <button onclick="switchTab('history')" class="text-sm font-medium text-primary hover:text-primary-dark flex items-center gap-1">
+                            <span>查看全部历史</span>
+                            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                        </button>
+                    </div>
+                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                        <div id="recentRecords" class="divide-y divide-gray-100">
+                            <div class="px-6 py-8 text-center text-gray-500 text-sm">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History View -->
+        <div id="historyView" class="view hidden">
+            <div class="max-w-5xl mx-auto px-6 py-16">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">申请历史</h1>
+                    <p class="text-gray-600">查看所有申请记录</p>
+                </div>
+
+                <!-- Search Filters -->
+                <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+                    <div class="grid grid-cols-4 gap-4 mb-4">
+                        <input type="text" id="historyCdkeySearch" placeholder="搜索CDKey" class="px-4 py-2 border border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm">
+                        <input type="text" id="historyReasonSearch" placeholder="搜索原因" class="px-4 py-2 border border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm">
+                        <input type="date" id="historyStartDate" class="px-4 py-2 border border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm">
+                        <input type="date" id="historyEndDate" class="px-4 py-2 border border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-sm">
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="loadHistory()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium">应用过滤</button>
+                        <button onclick="resetHistoryFilters()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">重置</button>
+                        <button onclick="exportHistory()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium" id="exportHistoryBtn">📥 导出CSV</button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <div id="historyList" class="divide-y divide-gray-100">
+                        <div class="px-6 py-8 text-center text-gray-500 text-sm">加载中...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manage View (Admin Only) -->
+        <div id="manageView" class="view hidden">
+            <div class="max-w-6xl mx-auto px-6 py-16">
+                <h1 class="text-3xl font-bold text-gray-900 mb-8">管理面板</h1>
+
+                <div class="bg-white rounded-xl border border-gray-200 p-8 mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">添加CDKey</h2>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">单个添加</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="singleCDKey" placeholder="输入CDKey" class="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none">
+                                <button onclick="addSingleCDKey()" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium">添加</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">批量添加</label>
+                            <textarea id="batchCDKeys" placeholder="每行一个" class="w-full h-20 px-4 py-2 border border-gray-200 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none resize-none mb-2"></textarea>
+                            <button onclick="addBatchCDKeys()" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium">批量添加</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 p-8">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">CDKey列表</h2>
+                    <div id="cdkeyList"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md p-8 rounded-2xl shadow-2xl">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-primary to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">申请成功</h3>
+                <p class="text-gray-600 mb-8">您的CDKey已生成</p>
+                <div class="bg-gray-50 p-4 rounded-xl mb-8 flex items-center justify-between border-2 border-primary/20">
+                    <code class="font-mono text-xl font-bold text-primary" id="generatedKey">-</code>
+                    <button onclick="copyKey()" class="p-2 hover:bg-primary/10 rounded-lg transition-colors">
+                        <span class="material-symbols-outlined text-primary" id="copyIcon">content_copy</span>
+                    </button>
+                </div>
+                <button onclick="closeModal()" class="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium rounded-xl transition-colors">
+                    关闭
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let generatedCDKey = '';
+
+        // Tab切换
+        function switchTab(tab) {
+            document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+
+            if (tab === 'request') {
+                document.getElementById('requestView').classList.remove('hidden');
+                document.getElementById('requestTab').classList.add('active');
+                loadRecentHistory();
+            } else if (tab === 'history') {
+                document.getElementById('historyView').classList.remove('hidden');
+                document.getElementById('historyTab').classList.add('active');
+                loadHistory();
+            }
+        }
+
+        // 用户菜单切换
+        function toggleUserMenu() {
+            const menu = document.getElementById('userMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // 点击外部关闭菜单
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('userMenu');
+            if (!menu.classList.contains('hidden') && !e.target.closest('#userMenu') && !e.target.closest('button[onclick="toggleUserMenu()"]')) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        // 页面加载
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+            loadStats();
+            loadRecentHistory();
+        });
+
+        // 检查登录
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/current-user');
+                const data = await response.json();
+
+                if (!data.success) {
+                    window.location.href = '/login-new.html';
+                    return;
+                }
+
+                currentUser = data.user;
+                window.currentUser = currentUser;
+
+                // 更新用户信息
+                const initial = currentUser.username.charAt(0).toUpperCase();
+                document.getElementById('userInitial').textContent = initial;
+                document.getElementById('topUserName').textContent = currentUser.username;
+                document.getElementById('topUserRole').textContent = currentUser.role === 'admin' ? '管理员' : '标准用户';
+                document.getElementById('menuUserName').textContent = currentUser.username;
+
+                // 显示配额
+                if (data.quota) {
+                    const remaining = data.quota.monthlyQuota - data.quota.monthlyUsed;
+                    document.getElementById('quotaDisplay').textContent = `${remaining}/${data.quota.monthlyQuota}`;
+                    document.getElementById('menuQuota').textContent = `配额: ${remaining}/${data.quota.monthlyQuota}`;
+                }
+
+                // 管理员显示管理入口
+                if (currentUser.role === 'admin') {
+                    // 可以在这里添加管理员Tab
+                }
+            } catch (error) {
+                console.error('检查登录失败:', error);
+                window.location.href = '/login-new.html';
+            }
+        }
+
+        // 表单提交
+        document.getElementById('requestForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const reason = document.getElementById('reason').value.trim();
+
+            if (!reason) {
+                alert('请输入申请原因');
+                return;
+            }
+
+            if (reason.length < 5) {
+                alert('请提供更详细的说明（至少5个字符）');
+                return;
+            }
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span><span>处理中...</span>';
+
+            try {
+                const response = await fetch('/api/get-cdkey', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    generatedCDKey = data.cdkey;
+                    document.getElementById('generatedKey').textContent = data.cdkey;
+                    document.getElementById('reason').value = '';
+                    showModal();
+                    await checkAuth();
+                    loadRecentHistory();
+                } else {
+                    alert(`申请失败: ${data.message}`);
+                }
+            } catch (error) {
+                alert('申请失败，请检查网络连接');
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        });
+
+        // 模态窗口
+        function showModal() {
+            document.getElementById('successModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('successModal').classList.add('hidden');
+        }
+
+        function copyKey() {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(generatedCDKey);
+                const icon = document.getElementById('copyIcon');
+                icon.textContent = 'done';
+                setTimeout(() => icon.textContent = 'content_copy', 1500);
+            }
+        }
+        // 加载统计（用于刷新配额）
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                // v2版本不显示统计卡片，只刷新配额
+            } catch (error) {
+                console.error('加载统计失败:', error);
+            }
+        }
+
+        // 加载最近历史
+        async function loadRecentHistory() {
+            try {
+                const response = await fetch('/api/history?limit=3');
+                const history = await response.json();
+
+                const container = document.getElementById('recentRecords');
+
+                if (history.length === 0) {
+                    container.innerHTML = '<div class="px-6 py-8 text-center text-gray-500 text-sm">暂无申请记录</div>';
+                    return;
+                }
+
+                container.innerHTML = history.map(item => `
+                    <div class="px-6 py-4 hover:bg-gray-50 transition-colors flex items-center justify-between group">
+                        <div class="flex items-center gap-4 flex-1 min-w-0">
+                            <code class="font-mono font-semibold text-primary bg-primary/5 px-3 py-1 rounded">${item.cdkey_code}</code>
+                            <span class="text-gray-600 text-sm truncate flex-1">${item.reason}</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-gray-500 text-sm">${formatDate(item.requested_at)}</span>
+                            <button onclick="quickCopy('${item.cdkey_code}')" class="opacity-0 group-hover:opacity-100 p-2 hover:bg-gray-100 rounded transition-all">
+                                <span class="material-symbols-outlined text-gray-600 text-[18px]">content_copy</span>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('加载历史失败:', error);
+            }
+        }
+
+        // 格式化日期
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (minutes < 1) return '刚刚';
+            if (minutes < 60) return `${minutes}分钟前`;
+            if (hours < 24) return `${hours}小时前`;
+            if (days < 7) return `${days}天前`;
+
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // 快速复制
+        function quickCopy(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    // 可以添加提示
+                });
+            }
+        }
+
+        // 加载历史列表（完整版）
+        async function loadHistory() {
+            try {
+                const cdkeySearch = document.getElementById('historyCdkeySearch').value;
+                const reasonSearch = document.getElementById('historyReasonSearch').value;
+                const startDate = document.getElementById('historyStartDate').value;
+                const endDate = document.getElementById('historyEndDate').value;
+
+                let url = '/api/history?limit=50';
+                if (cdkeySearch) url += `&cdkeySearch=${encodeURIComponent(cdkeySearch)}`;
+                if (reasonSearch) url += `&reasonSearch=${encodeURIComponent(reasonSearch)}`;
+                if (startDate) url += `&startDate=${startDate}`;
+                if (endDate) url += `&endDate=${endDate}`;
+
+                const response = await fetch(url);
+                const history = await response.json();
+
+                const container = document.getElementById('historyList');
+
+                if (history.length === 0) {
+                    container.innerHTML = '<div class="px-6 py-8 text-center text-gray-500 text-sm">没有找到匹配的记录</div>';
+                    return;
+                }
+
+                container.innerHTML = history.map(item => `
+                    <div class="px-6 py-4 hover:bg-gray-50 transition-colors flex items-center justify-between">
+                        <div class="flex items-center gap-4 flex-1">
+                            <code class="font-mono font-semibold text-primary bg-primary/5 px-3 py-1 rounded">${item.cdkey_code}</code>
+                            <span class="text-gray-600 text-sm flex-1">${item.reason}</span>
+                            <span class="text-gray-500 text-sm">${formatDate(item.requested_at)}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('加载历史失败:', error);
+                document.getElementById('historyList').innerHTML = '<div class="px-6 py-8 text-center text-red-500 text-sm">加载失败</div>';
+            }
+        }
+
+        // 重置历史过滤
+        function resetHistoryFilters() {
+            document.getElementById('historyCdkeySearch').value = '';
+            document.getElementById('historyReasonSearch').value = '';
+            document.getElementById('historyStartDate').value = '';
+            document.getElementById('historyEndDate').value = '';
+            loadHistory();
+        }
+
+        // 导出历史
+        async function exportHistory() {
+            const cdkeySearch = document.getElementById('historyCdkeySearch').value;
+            const reasonSearch = document.getElementById('historyReasonSearch').value;
+            const startDate = document.getElementById('historyStartDate').value;
+            const endDate = document.getElementById('historyEndDate').value;
+
+            let url = '/api/export/history?';
+            if (cdkeySearch) url += `&cdkeySearch=${encodeURIComponent(cdkeySearch)}`;
+            if (reasonSearch) url += `&reasonSearch=${encodeURIComponent(reasonSearch)}`;
+            if (startDate) url += `&startDate=${startDate}`;
+            if (endDate) url += `&endDate=${endDate}`;
+
+            window.location.href = url;
+        }
+
+        // 登出
+        async function logout() {
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.href = '/login-new.html';
+            } catch (error) {
+                console.error('登出失败:', error);
+            }
+        }
+    </script>
+</body>
+</html>

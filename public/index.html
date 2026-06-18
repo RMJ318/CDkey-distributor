@@ -18,6 +18,7 @@
                     <span id="userName" style="color: #667eea; font-weight: bold;"></span>
                     <span id="userRole" style="margin-left: 8px; padding: 4px 12px; background: #667eea; color: white; border-radius: 12px; font-size: 0.85em;"></span>
                 </div>
+                <div id="quotaInfo" style="margin-bottom: 10px; font-size: 0.9em; color: #666;"></div>
                 <button onclick="logout()" class="btn btn-secondary" style="padding: 8px 20px;">退出登录</button>
             </div>
         </div>
@@ -90,8 +91,44 @@
             </div>
 
             <h2 style="margin-top: 40px;">CDKey列表</h2>
-            <button onclick="loadAllCDKeys()" class="btn btn-secondary">刷新列表</button>
+
+            <!-- 搜索和过滤 -->
+            <div class="search-filter-box">
+                <h3>🔍 搜索和过滤</h3>
+                <div class="search-grid">
+                    <div class="form-group">
+                        <label for="cdkeySearch">CDKey：</label>
+                        <input type="text" id="cdkeySearch" placeholder="关键词">
+                    </div>
+                    <div class="form-group">
+                        <label for="statusFilter">状态：</label>
+                        <select id="statusFilter">
+                            <option value="">全部</option>
+                            <option value="available">可用</option>
+                            <option value="used">已使用</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="startDate">开始日期：</label>
+                        <input type="date" id="startDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">结束日期：</label>
+                        <input type="date" id="endDate">
+                    </div>
+                </div>
+                <div class="search-actions">
+                    <button onclick="loadAllCDKeys()" class="btn btn-primary">应用过滤</button>
+                    <button onclick="resetCDKeyFilters()" class="btn btn-secondary">重置</button>
+                    <button onclick="exportCDKeys()" class="btn btn-secondary">📥 导出CSV</button>
+                </div>
+            </div>
+
             <div id="cdkey-list" style="margin-top: 20px;"></div>
+
+            <h2 style="margin-top: 40px;">用户配额管理</h2>
+            <button onclick="loadUsers()" class="btn btn-secondary">刷新用户列表</button>
+            <div id="user-list" style="margin-top: 20px;"></div>
 
             <div class="danger-zone">
                 <h3>⚠️ 危险操作</h3>
@@ -102,7 +139,39 @@
         <!-- 请求历史面板 -->
         <div id="history-panel" class="panel">
             <h2>请求历史</h2>
-            <button onclick="loadHistory()" class="btn btn-secondary">刷新历史</button>
+
+            <!-- 搜索和过滤 -->
+            <div class="search-filter-box">
+                <h3>🔍 搜索和过滤</h3>
+                <div class="search-grid">
+                    <div class="form-group">
+                        <label for="historyCdkeySearch">CDKey：</label>
+                        <input type="text" id="historyCdkeySearch" placeholder="关键词">
+                    </div>
+                    <div class="form-group">
+                        <label for="historyReasonSearch">原因：</label>
+                        <input type="text" id="historyReasonSearch" placeholder="关键词">
+                    </div>
+                    <div class="form-group" id="historyUsernameSearchGroup">
+                        <label for="historyUsernameSearch">用户名：</label>
+                        <input type="text" id="historyUsernameSearch" placeholder="用户名">
+                    </div>
+                    <div class="form-group">
+                        <label for="historyStartDate">开始日期：</label>
+                        <input type="date" id="historyStartDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="historyEndDate">结束日期：</label>
+                        <input type="date" id="historyEndDate">
+                    </div>
+                </div>
+                <div class="search-actions">
+                    <button onclick="loadHistory()" class="btn btn-primary">应用过滤</button>
+                    <button onclick="resetHistoryFilters()" class="btn btn-secondary">重置</button>
+                    <button onclick="exportHistory()" class="btn btn-secondary" id="exportHistoryBtn">📥 导出CSV</button>
+                </div>
+            </div>
+
             <div id="history-list" class="history-list"></div>
         </div>
     </div>

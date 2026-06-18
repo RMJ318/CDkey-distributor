@@ -25,6 +25,20 @@ app.use(session({
   cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24小时
 }));
 
+// 主页重定向（必须在static之前）
+app.get('/', (req, res) => {
+  if (req.session.user) {
+    // 根据用户角色重定向到不同的dashboard
+    if (req.session.user.role === 'admin') {
+      res.redirect('/dashboard.html');  // 管理员 → v1完整版Dashboard
+    } else {
+      res.redirect('/dashboard-v2.html');  // 普通用户 → v2极简版Dashboard
+    }
+  } else {
+    res.redirect('/login-new.html');  // 新版登录
+  }
+});
+
 app.use(express.static('public'));
 
 // 认证中间件
@@ -76,10 +90,15 @@ app.post('/api/logout', (req, res) => {
   res.json({ success: true, message: '已登出' });
 });
 
-// 获取当前用户信息
+// 获取当前用户信息（包含配额）
 app.get('/api/current-user', (req, res) => {
   if (req.session.user) {
-    res.json({ success: true, user: req.session.user });
+    const quotaInfo = db.getUserQuotaInfo(req.session.user.id);
+    res.json({
+      success: true,
+      user: req.session.user,
+      quota: quotaInfo
+    });
   } else {
     res.json({ success: false });
   }
@@ -137,24 +156,40 @@ app.get('/api/stats', (req, res) => {
   res.json(stats);
 });
 
-// 获取所有CDKey列表
-app.get('/api/cdkeys', (req, res) => {
+// 获取所有CDKey列表（支持搜索过滤）
+app.get('/api/cdkeys', requireAuth, (req, res) => {
   const limit = parseInt(req.query.limit) || 100;
   const offset = parseInt(req.query.offset) || 0;
-  const cdkeys = db.getAllCDKeys(limit, offset);
+
+  const filters = {
+    codeSearch: req.query.codeSearch,
+    status: req.query.status,
+    startDate: req.query.startDate,
+    endDate: req.query.endDate
+  };
+
+  const cdkeys = db.getAllCDKeys(limit, offset, filters);
   res.json(cdkeys);
 });
 
-// 获取请求历史（管理员看全部，普通用户只看自己的）
+// 获取请求历史（管理员看全部，普通用户只看自己的，支持搜索过滤）
 app.get('/api/history', requireAuth, (req, res) => {
   const limit = parseInt(req.query.limit) || 50;
   const offset = parseInt(req.query.offset) || 0;
 
+  const filters = {
+    cdkeySearch: req.query.cdkeySearch,
+    reasonSearch: req.query.reasonSearch,
+    usernameSearch: req.query.usernameSearch,
+    startDate: req.query.startDate,
+    endDate: req.query.endDate
+  };
+
   let history;
   if (req.session.user.role === 'admin') {
-    history = db.getRequestHistory(limit, offset);
+    history = db.getRequestHistory(limit, offset, filters);
   } else {
-    history = db.getUserRequestHistory(req.session.user.id, limit, offset);
+    history = db.getUserRequestHistory(req.session.user.id, limit, offset, filters);
   }
 
   res.json(history);
@@ -186,6 +221,67 @@ app.post('/api/users', requireAdmin, (req, res) => {
 
   const result = db.createUser(username, password, role || 'user');
   res.json(result);
+});
+
+// 更新用户配额（需要管理员权限）
+app.put('/api/users/:id/quota', requireAdmin, (req, res) => {
+  const userId = parseInt(req.params.id);
+  const { dailyQuota, monthlyQuota } = req.body;
+
+  if (!dailyQuota || !monthlyQuota) {
+    return res.status(400).json({
+      success: false,
+      message: '请提供每日和每月配额'
+    });
+  }
+
+  const result = db.updateUserQuota(userId, dailyQuota, monthlyQuota);
+  res.json(result);
+});
+
+// 导出CDKey数据（CSV格式，需要管理员权限）
+app.get('/api/export/cdkeys', requireAdmin, (req, res) => {
+  const filters = {
+    codeSearch: req.query.codeSearch,
+    status: req.query.status,
+    startDate: req.query.startDate,
+    endDate: req.query.endDate
+  };
+
+  const cdkeys = db.getAllCDKeys(10000, 0, filters); // 最多导出10000条
+
+  // 构建CSV内容
+  let csv = 'ID,CDKey,状态,创建时间,使用时间\n';
+  cdkeys.forEach(key => {
+    csv += `${key.id},"${key.code}",${key.is_used ? '已使用' : '可用'},"${key.created_at}","${key.used_at || ''}"\n`;
+  });
+
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="cdkeys_${new Date().toISOString().split('T')[0]}.csv"`);
+  res.send('﻿' + csv); // 添加BOM以支持Excel打开中文
+});
+
+// 导出请求历史（CSV格式，需要管理员权限）
+app.get('/api/export/history', requireAdmin, (req, res) => {
+  const filters = {
+    cdkeySearch: req.query.cdkeySearch,
+    reasonSearch: req.query.reasonSearch,
+    usernameSearch: req.query.usernameSearch,
+    startDate: req.query.startDate,
+    endDate: req.query.endDate
+  };
+
+  const history = db.getRequestHistory(10000, 0, filters); // 最多导出10000条
+
+  // 构建CSV内容
+  let csv = 'ID,用户名,CDKey,请求原因,请求时间\n';
+  history.forEach(item => {
+    csv += `${item.id},"${item.username || ''}","${item.cdkey_code}","${item.reason}","${item.requested_at}"\n`;
+  });
+
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="history_${new Date().toISOString().split('T')[0]}.csv"`);
+  res.send('﻿' + csv); // 添加BOM以支持Excel打开中文
 });
 
 // 清空数据（需要管理员权限）

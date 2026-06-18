@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html class="light" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Violet Protocol - CDKey分配系统登录</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;900&family=Courier+Prime:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3953bd',
+                        secondary: '#754aa1',
+                        'primary-container': '#546cd7',
+                        surface: '#f9f9ff',
+                        'surface-container': '#e8eeff',
+                        'surface-container-low': '#f1f3ff',
+                        'surface-container-lowest': '#ffffff',
+                        'on-surface': '#161c27',
+                        'on-surface-variant': '#444653',
+                        'outline': '#757684',
+                        'outline-variant': '#c5c5d5',
+                    },
+                    fontFamily: {
+                        sans: ['Hanken Grotesk', 'sans-serif'],
+                        mono: ['Courier Prime', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Hanken Grotesk', sans-serif;
+            background-color: #f9f9ff;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .purple-gradient {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        .purple-gradient-text {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        input:focus {
+            outline: none !important;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+        }
+        .alert {
+            display: none;
+        }
+        .alert.show {
+            display: block;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 relative">
+    <!-- Background Decoration -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute -top-[10%] -left-[5%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px]"></div>
+        <div class="absolute -bottom-[10%] -right-[5%] w-[40%] h-[40%] rounded-full bg-secondary/5 blur-[120px]"></div>
+    </div>
+
+    <div class="w-full max-w-[480px] relative z-10 flex flex-col gap-2">
+        <!-- Login Card -->
+        <main class="glass-card rounded-xl shadow-xl p-10 flex flex-col items-center">
+            <!-- Brand Identity -->
+            <div class="flex flex-col items-center gap-2 mb-8 text-center">
+                <div class="w-16 h-16 rounded-xl purple-gradient flex items-center justify-center shadow-lg transform transition-transform hover:scale-105 duration-300">
+                    <span class="material-symbols-outlined text-white text-[40px]">vpn_key</span>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold purple-gradient-text">CDKey分配系统</h1>
+                    <p class="text-on-surface-variant mt-1">Violet Protocol Enterprise Distribution</p>
+                </div>
+            </div>
+
+            <!-- Alert -->
+            <div id="alert" class="alert w-full p-3 rounded-lg mb-4 text-sm"></div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="w-full flex flex-col gap-6">
+                <!-- Username Field -->
+                <div class="flex flex-col gap-1">
+                    <label class="text-sm font-semibold text-on-surface-variant ml-1">用户名</label>
+                    <div class="relative group">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">person</span>
+                        <input
+                            id="username"
+                            class="w-full h-12 pl-10 pr-4 bg-surface-container-lowest border border-outline-variant rounded-lg transition-all placeholder:text-outline focus:border-primary"
+                            placeholder="请输入您的用户名"
+                            type="text"
+                            autocomplete="username"
+                            required
+                        />
+                    </div>
+                </div>
+
+                <!-- Password Field -->
+                <div class="flex flex-col gap-1">
+                    <label class="text-sm font-semibold text-on-surface-variant ml-1">密码</label>
+                    <div class="relative group">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">lock</span>
+                        <input
+                            id="password"
+                            class="w-full h-12 pl-10 pr-4 bg-surface-container-lowest border border-outline-variant rounded-lg transition-all placeholder:text-outline focus:border-primary"
+                            placeholder="请输入您的密码"
+                            type="password"
+                            autocomplete="current-password"
+                            required
+                        />
+                    </div>
+                </div>
+
+                <!-- Login Button -->
+                <button
+                    type="submit"
+                    class="purple-gradient text-white h-14 rounded-lg text-xl font-semibold mt-2 shadow-lg transform active:scale-[0.98] hover:translate-y-[-2px] transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                    立即登录
+                    <span class="material-symbols-outlined">login</span>
+                </button>
+            </form>
+        </main>
+
+        <!-- Test Credentials Section -->
+        <section class="mt-6 bg-surface-container-low rounded-lg p-6 border border-outline-variant/30">
+            <h3 class="text-sm font-semibold text-on-surface-variant uppercase tracking-wider mb-3 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">info</span>
+                测试凭据
+            </h3>
+            <div class="grid grid-cols-2 gap-6">
+                <!-- Admin Cred -->
+                <div class="bg-surface-container-lowest p-3 rounded border border-outline-variant flex flex-col gap-1">
+                    <span class="text-primary uppercase text-[11px] font-semibold">管理员账号</span>
+                    <div class="flex flex-col">
+                        <code class="font-mono text-on-surface font-bold">admin</code>
+                        <code class="font-mono text-on-surface-variant/70 text-sm">admin123</code>
+                    </div>
+                </div>
+                <!-- User Cred -->
+                <div class="bg-surface-container-lowest p-3 rounded border border-outline-variant flex flex-col gap-1">
+                    <span class="text-secondary uppercase text-[11px] font-semibold">普通用户</span>
+                    <div class="flex flex-col">
+                        <code class="font-mono text-on-surface font-bold">user</code>
+                        <code class="font-mono text-on-surface-variant/70 text-sm">user123</code>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="mt-16 text-center flex flex-col gap-1">
+            <div class="flex items-center justify-center gap-2 text-on-surface-variant opacity-60">
+                <span class="text-sm">© 2024 Violet Protocol Distribution. All rights reserved.</span>
+            </div>
+            <div class="flex items-center justify-center gap-2">
+                <span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant text-[11px] uppercase tracking-widest">Enterprise Edition</span>
+                <span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+                <span class="text-on-surface-variant text-[11px] uppercase tracking-widest">v2.4.0-stable</span>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 检查是否已登录
+        fetch('/api/current-user')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // 根据角色重定向
+                    if (data.user.role === 'admin') {
+                        window.location.href = '/dashboard.html';
+                    } else {
+                        window.location.href = '/dashboard-v2.html';
+                    }
+                }
+            });
+
+        // 登录表单提交
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = e.target.querySelector('button[type="submit"]');
+            const alert = document.getElementById('alert');
+
+            // 显示加载状态
+            const originalHtml = loginBtn.innerHTML;
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = `
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                正在验证...
+            `;
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('登录成功，正在跳转...', 'success');
+                    setTimeout(() => {
+                        // 根据角色重定向
+                        if (data.user && data.user.role === 'admin') {
+                            window.location.href = '/dashboard.html';
+                        } else {
+                            window.location.href = '/dashboard-v2.html';
+                        }
+                    }, 1000);
+                } else {
+                    showAlert(data.message, 'error');
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = originalHtml;
+                }
+            } catch (error) {
+                showAlert('登录失败，请检查网络连接', 'error');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = originalHtml;
+            }
+        });
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert show p-3 rounded-lg mb-4 text-sm ${type === 'success' ? 'bg-green-100 text-green-800 border border-green-300' : 'bg-red-100 text-red-800 border border-red-300'}`;
+        }
+    </script>
+</body>
+</html>

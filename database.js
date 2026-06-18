@@ -57,6 +57,8 @@ async function initDatabase() {
       username TEXT NOT NULL UNIQUE,
       password TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'user',
+      daily_quota INTEGER DEFAULT 5,
+      monthly_quota INTEGER DEFAULT 30,
       created_at TEXT DEFAULT (datetime('now', 'localtime'))
     )
   `);
@@ -172,14 +174,37 @@ function getStats() {
   };
 }
 
-// 获取所有CDKey列表
-function getAllCDKeys(limit = 100, offset = 0) {
-  const result = db.exec(`
+// 获取所有CDKey列表（支持搜索和过滤）
+function getAllCDKeys(limit = 100, offset = 0, filters = {}) {
+  let query = `
     SELECT id, code, is_used, created_at, used_at
     FROM cdkeys
-    ORDER BY created_at DESC
-    LIMIT ${limit} OFFSET ${offset}
-  `);
+    WHERE 1=1
+  `;
+
+  // 搜索CDKey
+  if (filters.codeSearch) {
+    query += ` AND code LIKE '%${filters.codeSearch}%'`;
+  }
+
+  // 按状态过滤
+  if (filters.status === 'used') {
+    query += ` AND is_used = 1`;
+  } else if (filters.status === 'available') {
+    query += ` AND is_used = 0`;
+  }
+
+  // 日期范围过滤
+  if (filters.startDate) {
+    query += ` AND date(created_at) >= '${filters.startDate}'`;
+  }
+  if (filters.endDate) {
+    query += ` AND date(created_at) <= '${filters.endDate}'`;
+  }
+
+  query += ` ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+
+  const result = db.exec(query);
 
   if (!result.length) return [];
 
@@ -195,14 +220,41 @@ function getAllCDKeys(limit = 100, offset = 0) {
   });
 }
 
-// 获取请求历史
-function getRequestHistory(limit = 50, offset = 0) {
-  const result = db.exec(`
-    SELECT id, reason, cdkey_code, requested_at
-    FROM requests
-    ORDER BY requested_at DESC
-    LIMIT ${limit} OFFSET ${offset}
-  `);
+// 获取请求历史（支持搜索和过滤）
+function getRequestHistory(limit = 50, offset = 0, filters = {}) {
+  let query = `
+    SELECT r.id, r.reason, r.cdkey_code, r.requested_at, u.username
+    FROM requests r
+    LEFT JOIN users u ON r.user_id = u.id
+    WHERE 1=1
+  `;
+
+  // 搜索CDKey
+  if (filters.cdkeySearch) {
+    query += ` AND r.cdkey_code LIKE '%${filters.cdkeySearch}%'`;
+  }
+
+  // 搜索原因
+  if (filters.reasonSearch) {
+    query += ` AND r.reason LIKE '%${filters.reasonSearch}%'`;
+  }
+
+  // 搜索用户名
+  if (filters.usernameSearch) {
+    query += ` AND u.username LIKE '%${filters.usernameSearch}%'`;
+  }
+
+  // 日期范围过滤
+  if (filters.startDate) {
+    query += ` AND date(r.requested_at) >= '${filters.startDate}'`;
+  }
+  if (filters.endDate) {
+    query += ` AND date(r.requested_at) <= '${filters.endDate}'`;
+  }
+
+  query += ` ORDER BY r.requested_at DESC LIMIT ${limit} OFFSET ${offset}`;
+
+  const result = db.exec(query);
 
   if (!result.length) return [];
 
@@ -251,12 +303,24 @@ function authenticateUser(username, password) {
 }
 
 // 创建新用户
-function createUser(username, password, role = 'user') {
+function createUser(username, password, role = 'user', dailyQuota = 5, monthlyQuota = 30) {
   try {
-    db.run('INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
-      [username, password, role]);
+    db.run('INSERT INTO users (username, password, role, daily_quota, monthly_quota) VALUES (?, ?, ?, ?, ?)',
+      [username, password, role, dailyQuota, monthlyQuota]);
     saveDatabase();
     return { success: true, message: '用户创建成功' };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+// 更新用户配额
+function updateUserQuota(userId, dailyQuota, monthlyQuota) {
+  try {
+    db.run('UPDATE users SET daily_quota = ?, monthly_quota = ? WHERE id = ?',
+      [dailyQuota, monthlyQuota, userId]);
+    saveDatabase();
+    return { success: true, message: '配额更新成功' };
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -265,7 +329,7 @@ function createUser(username, password, role = 'user') {
 // 获取所有用户
 function getAllUsers() {
   const result = db.exec(`
-    SELECT id, username, role, created_at
+    SELECT id, username, role, daily_quota, monthly_quota, created_at
     FROM users
     ORDER BY created_at DESC
   `);
@@ -295,9 +359,109 @@ function deleteCDKey(id) {
   }
 }
 
-// 修改getCDKey，添加用户ID
+// 检查用户配额
+function checkUserQuota(userId) {
+  const today = new Date().toISOString().split('T')[0];
+  const thisMonth = today.substring(0, 7);
+
+  // 获取用户配额设置
+  const userResult = db.exec(`SELECT daily_quota, monthly_quota FROM users WHERE id = ${userId}`);
+  if (!userResult.length || !userResult[0].values.length) {
+    return { allowed: false, message: '用户不存在' };
+  }
+
+  const dailyQuota = userResult[0].values[0][0];
+  const monthlyQuota = userResult[0].values[0][1];
+
+  // 检查今日使用量
+  const dailyResult = db.exec(`
+    SELECT COUNT(*) as count FROM requests
+    WHERE user_id = ${userId}
+    AND date(requested_at) = '${today}'
+  `);
+  const dailyUsed = dailyResult.length ? dailyResult[0].values[0][0] : 0;
+
+  if (dailyUsed >= dailyQuota) {
+    return {
+      allowed: false,
+      message: `已达今日配额上限（${dailyQuota}次），请明天再试`,
+      dailyUsed,
+      dailyQuota
+    };
+  }
+
+  // 检查本月使用量
+  const monthlyResult = db.exec(`
+    SELECT COUNT(*) as count FROM requests
+    WHERE user_id = ${userId}
+    AND strftime('%Y-%m', requested_at) = '${thisMonth}'
+  `);
+  const monthlyUsed = monthlyResult.length ? monthlyResult[0].values[0][0] : 0;
+
+  if (monthlyUsed >= monthlyQuota) {
+    return {
+      allowed: false,
+      message: `已达本月配额上限（${monthlyQuota}次），请下月再试`,
+      monthlyUsed,
+      monthlyQuota
+    };
+  }
+
+  return {
+    allowed: true,
+    dailyUsed,
+    dailyQuota,
+    monthlyUsed,
+    monthlyQuota
+  };
+}
+
+// 获取用户配额信息
+function getUserQuotaInfo(userId) {
+  const today = new Date().toISOString().split('T')[0];
+  const thisMonth = today.substring(0, 7);
+
+  const userResult = db.exec(`SELECT daily_quota, monthly_quota FROM users WHERE id = ${userId}`);
+  if (!userResult.length || !userResult[0].values.length) {
+    return null;
+  }
+
+  const dailyQuota = userResult[0].values[0][0];
+  const monthlyQuota = userResult[0].values[0][1];
+
+  const dailyResult = db.exec(`
+    SELECT COUNT(*) as count FROM requests
+    WHERE user_id = ${userId}
+    AND date(requested_at) = '${today}'
+  `);
+  const dailyUsed = dailyResult.length ? dailyResult[0].values[0][0] : 0;
+
+  const monthlyResult = db.exec(`
+    SELECT COUNT(*) as count FROM requests
+    WHERE user_id = ${userId}
+    AND strftime('%Y-%m', requested_at) = '${thisMonth}'
+  `);
+  const monthlyUsed = monthlyResult.length ? monthlyResult[0].values[0][0] : 0;
+
+  return {
+    dailyUsed,
+    dailyQuota,
+    dailyRemaining: dailyQuota - dailyUsed,
+    monthlyUsed,
+    monthlyQuota,
+    monthlyRemaining: monthlyQuota - monthlyUsed
+  };
+}
+
+// 修改getCDKey，添加用户ID和配额检查
 function getCDKeyWithUser(reason, userId) {
   try {
+    // 检查配额
+    const quotaCheck = checkUserQuota(userId);
+    if (!quotaCheck.allowed) {
+      return { success: false, message: quotaCheck.message };
+    }
+
     // 查找最早的未使用CDKey（FIFO）
     const result = db.exec(`
       SELECT id, code
@@ -339,15 +503,35 @@ function getCDKeyWithUser(reason, userId) {
   }
 }
 
-// 获取用户的请求历史
-function getUserRequestHistory(userId, limit = 50, offset = 0) {
-  const result = db.exec(`
+// 获取用户的请求历史（支持搜索和过滤）
+function getUserRequestHistory(userId, limit = 50, offset = 0, filters = {}) {
+  let query = `
     SELECT r.id, r.reason, r.cdkey_code, r.requested_at
     FROM requests r
     WHERE r.user_id = ${userId}
-    ORDER BY r.requested_at DESC
-    LIMIT ${limit} OFFSET ${offset}
-  `);
+  `;
+
+  // 搜索CDKey
+  if (filters.cdkeySearch) {
+    query += ` AND r.cdkey_code LIKE '%${filters.cdkeySearch}%'`;
+  }
+
+  // 搜索原因
+  if (filters.reasonSearch) {
+    query += ` AND r.reason LIKE '%${filters.reasonSearch}%'`;
+  }
+
+  // 日期范围过滤
+  if (filters.startDate) {
+    query += ` AND date(r.requested_at) >= '${filters.startDate}'`;
+  }
+  if (filters.endDate) {
+    query += ` AND date(r.requested_at) <= '${filters.endDate}'`;
+  }
+
+  query += ` ORDER BY r.requested_at DESC LIMIT ${limit} OFFSET ${offset}`;
+
+  const result = db.exec(query);
 
   if (!result.length) return [];
 
@@ -377,5 +561,8 @@ module.exports = {
   authenticateUser,
   createUser,
   getAllUsers,
-  deleteCDKey
+  deleteCDKey,
+  checkUserQuota,
+  getUserQuotaInfo,
+  updateUserQuota
 };

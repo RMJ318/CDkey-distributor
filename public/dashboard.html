@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html class="light" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Violet Protocol - CDKey分配系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;900&family=Courier+Prime:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3953bd',
+                        secondary: '#754aa1',
+                        'primary-container': '#546cd7',
+                        surface: '#f9f9ff',
+                        'surface-container': '#e8eeff',
+                        'surface-container-high': '#e3e8f9',
+                        'surface-container-low': '#f1f3ff',
+                        'surface-container-lowest': '#ffffff',
+                        'on-surface': '#161c27',
+                        'on-surface-variant': '#444653',
+                        'outline': '#757684',
+                        'outline-variant': '#c5c5d5',
+                        error: '#ba1a1a',
+                        success: '#28a745',
+                    },
+                    fontFamily: {
+                        sans: ['Hanken Grotesk', 'sans-serif'],
+                        mono: ['Courier Prime', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Hanken Grotesk', sans-serif;
+            background-color: #f9f9ff;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .violet-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #dde2f3;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="text-on-surface">
+    <!-- Sidebar -->
+    <aside class="w-[240px] h-screen fixed left-0 top-0 bg-surface shadow-lg flex flex-col gap-2 p-4 border-r border-outline-variant z-50">
+        <div class="mb-8 px-2">
+            <h1 class="text-2xl font-bold text-primary">Violet Protocol</h1>
+            <p class="text-on-surface-variant text-xs opacity-70 uppercase tracking-widest">Enterprise Distribution</p>
+        </div>
+        <nav class="flex-grow flex flex-col gap-1">
+            <a onclick="switchView('request')" class="nav-link active violet-gradient text-white rounded-lg mx-2 my-1 flex items-center gap-3 p-3 transition-all duration-200 active:scale-95 cursor-pointer">
+                <span class="material-symbols-outlined">add_box</span>
+                <span>请求CDKey</span>
+            </a>
+            <a onclick="switchView('manage')" class="nav-link text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 flex items-center gap-3 p-3 rounded-lg transition-colors duration-200 active:scale-95 cursor-pointer" id="manageNav" style="display:none;">
+                <span class="material-symbols-outlined">inventory_2</span>
+                <span>管理CDKey</span>
+            </a>
+            <a onclick="switchView('history')" class="nav-link text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 flex items-center gap-3 p-3 rounded-lg transition-colors duration-200 active:scale-95 cursor-pointer">
+                <span class="material-symbols-outlined">history</span>
+                <span>请求历史</span>
+            </a>
+        </nav>
+
+        <!-- User Section -->
+        <div class="border-t border-outline-variant pt-4">
+            <div class="flex items-center gap-3 p-2">
+                <div class="w-10 h-10 rounded-full violet-gradient flex items-center justify-center text-white">
+                    <span class="material-symbols-outlined">person</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-on-surface truncate" id="userName">加载中...</p>
+                    <p class="text-xs text-on-surface-variant" id="userRole">-</p>
+                </div>
+            </div>
+            <div class="mt-2 px-2 text-xs text-on-surface-variant" id="quotaInfo"></div>
+            <button onclick="logout()" class="w-full mt-3 flex items-center justify-center gap-2 p-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">
+                <span class="material-symbols-outlined text-[18px]">logout</span>
+                <span>退出登录</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ml-[240px] p-8">
+        <!-- Unified Info Bar -->
+        <section class="bg-gradient-to-r from-primary/5 via-surface to-secondary/5 rounded-xl p-5 mb-8 border border-outline-variant/30 shadow-sm">
+            <div class="grid grid-cols-12 gap-4 items-center">
+                <!-- User Welcome -->
+                <div class="col-span-3 flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-full violet-gradient flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                        <span class="material-symbols-outlined text-xl">person</span>
+                    </div>
+                    <div class="min-w-0">
+                        <h2 class="text-base font-bold text-on-surface truncate">您好，<span id="welcomeUserName">用户</span></h2>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold inline-block" id="welcomeUserRole">标准用户</span>
+                    </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="w-px h-12 bg-outline-variant"></div>
+
+                <!-- Stats Grid -->
+                <div class="col-span-5 grid grid-cols-3 gap-3">
+                    <div class="text-center">
+                        <p class="text-on-surface-variant text-[10px] mb-0.5">总密钥</p>
+                        <p class="text-xl font-bold text-on-surface" id="totalKeys">0</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-on-surface-variant text-[10px] mb-0.5">可用</p>
+                        <p class="text-xl font-bold text-success" id="availableKeys">0</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-on-surface-variant text-[10px] mb-0.5">已使用</p>
+                        <p class="text-xl font-bold text-error" id="usedKeys">0</p>
+                    </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="w-px h-12 bg-outline-variant"></div>
+
+                <!-- Quota -->
+                <div class="col-span-2 text-center">
+                    <p class="text-on-surface-variant text-[10px] mb-0.5">本月配额</p>
+                    <div class="flex items-baseline justify-center gap-1">
+                        <span class="text-xl font-bold text-primary" id="quotaRemaining">-</span>
+                        <span class="text-on-surface-variant text-xs">/ <span id="quotaTotal">-</span></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Request View -->
+        <div id="request-view" class="view">
+            <!-- Minimalist Request Section -->
+            <section class="max-w-2xl mx-auto">
+                <!-- Simple Header -->
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-on-surface mb-3">申请CDKey</h2>
+                    <p class="text-on-surface-variant">剩余 <span class="text-primary font-bold" id="simpleQuotaRemaining">-</span>/<span id="simpleQuotaTotal">-</span></p>
+                </div>
+
+                <!-- Request Form -->
+                <div class="bg-white border-2 border-outline-variant rounded-2xl p-8 shadow-sm mb-10">
+                    <form id="keyRequestForm">
+                        <div class="mb-6">
+                            <label class="block text-on-surface font-semibold mb-3">申请原因</label>
+                            <textarea
+                                id="reason"
+                                class="w-full h-40 p-4 bg-surface-container-lowest border-2 border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none text-on-surface"
+                                placeholder="请简要说明申请理由..."
+                            ></textarea>
+                        </div>
+                        <button
+                            type="submit"
+                            class="w-full violet-gradient text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all"
+                        >
+                            获取CDKey
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Recent Records -->
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-on-surface">最近申请记录</h3>
+                        <button onclick="switchView('history')" class="text-primary font-semibold hover:underline flex items-center gap-1">
+                            <span>查看全部</span>
+                            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                        </button>
+                    </div>
+                    <div class="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+                        <div id="recent-history-preview" class="divide-y divide-outline-variant">
+                            <p class="text-center text-on-surface-variant py-10 text-sm">加载中...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Manage View (Admin Only) -->
+        <div id="manage-view" class="view hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-outline-variant p-8 mb-6">
+                <h2 class="text-2xl font-bold text-on-surface mb-6">添加CDKey</h2>
+
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-on-surface-variant mb-2">单个添加</label>
+                        <div class="flex gap-2">
+                            <input
+                                id="singleCDKey"
+                                type="text"
+                                class="flex-1 h-12 px-4 bg-surface-container-lowest border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                placeholder="输入CDKey"
+                            />
+                            <button onclick="addSingleCDKey()" class="px-6 bg-primary text-white rounded-lg hover:bg-primary-container transition-colors whitespace-nowrap">添加</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-on-surface-variant mb-2">CSV导入</label>
+                        <div class="flex gap-2">
+                            <input
+                                id="csvFileInput"
+                                type="file"
+                                accept=".csv"
+                                class="hidden"
+                                onchange="handleCSVUpload(event)"
+                            />
+                            <button onclick="document.getElementById('csvFileInput').click()" class="flex-1 h-12 px-4 bg-surface-container-lowest border-2 border-dashed border-outline-variant rounded-lg hover:border-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined">upload_file</span>
+                                <span>选择CSV文件</span>
+                            </button>
+                        </div>
+                        <p class="text-xs text-on-surface-variant mt-1">支持包含code列的CSV</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface-variant mb-2">批量添加（每行一个）</label>
+                    <textarea
+                        id="batchCDKeys"
+                        class="w-full h-32 p-4 bg-surface-container-lowest border border-outline-variant rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary mb-3"
+                        placeholder="KEY-001&#10;KEY-002&#10;KEY-003"
+                    ></textarea>
+                    <button onclick="addBatchCDKeys()" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-container transition-colors">批量添加</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-outline-variant p-8 mb-6">
+                <h2 class="text-2xl font-bold text-on-surface mb-4">CDKey列表</h2>
+
+                <!-- Search Filters -->
+                <div class="grid grid-cols-4 gap-4 mb-4">
+                    <input type="text" id="cdkeySearch" placeholder="搜索CDKey" class="h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm">
+                    <select id="statusFilter" class="h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm">
+                        <option value="">全部状态</option>
+                        <option value="available">可用</option>
+                        <option value="used">已使用</option>
+                    </select>
+                    <input type="date" id="startDate" class="h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm">
+                    <input type="date" id="endDate" class="h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm">
+                </div>
+                <div class="flex gap-2 mb-4">
+                    <button onclick="loadAllCDKeys()" class="px-4 py-2 bg-primary text-white rounded-lg text-sm">应用过滤</button>
+                    <button onclick="resetCDKeyFilters()" class="px-4 py-2 bg-surface-container text-on-surface rounded-lg text-sm">重置</button>
+                    <button onclick="exportCDKeys()" class="px-4 py-2 bg-surface-container text-on-surface rounded-lg text-sm">📥 导出CSV</button>
+                </div>
+
+                <div id="cdkey-list" class="overflow-auto custom-scrollbar"></div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-outline-variant p-8 mb-6">
+                <h2 class="text-2xl font-bold text-on-surface mb-4">用户配额管理</h2>
+                <button onclick="loadUsers()" class="px-4 py-2 bg-primary text-white rounded-lg text-sm mb-4">刷新用户列表</button>
+                <div id="user-list"></div>
+            </div>
+
+            <div class="bg-red-50 rounded-xl p-6 border-2 border-red-200">
+                <h3 class="text-lg font-bold text-red-800 mb-3">⚠️ 危险操作</h3>
+                <button onclick="clearAllData()" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">清空所有数据</button>
+            </div>
+        </div>
+
+        <!-- History View -->
+        <div id="history-view" class="view hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-outline-variant p-8">
+                <h2 class="text-2xl font-bold text-on-surface mb-6">请求历史</h2>
+
+                <!-- Search Filters -->
+                <div class="grid grid-cols-5 gap-4 mb-4">
+                    <input type="text" id="historyCdkeySearch" placeholder="搜索CDKey" class="h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm">
+                    <input type="text" id="historyReasonSearch" placeholder="搜索原因" class="h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm">
+                    <input type="text" id="historyUsernameSearch" placeholder="搜索用户" class="h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm">
+                    <input type="date" id="historyStartDate" class="h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm">
+                    <input type="date" id="historyEndDate" class="h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm">
+                </div>
+                <div class="flex gap-2 mb-6">
+                    <button onclick="loadHistory()" class="px-4 py-2 bg-primary text-white rounded-lg text-sm">应用过滤</button>
+                    <button onclick="resetHistoryFilters()" class="px-4 py-2 bg-surface-container text-on-surface rounded-lg text-sm">重置</button>
+                    <button onclick="exportHistory()" class="px-4 py-2 bg-surface-container text-on-surface rounded-lg text-sm" id="exportHistoryBtn">📥 导出CSV</button>
+                </div>
+
+                <div id="history-list" class="space-y-3"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Success Modal -->
+    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300" id="successModal">
+        <div class="bg-white border border-outline-variant w-full max-w-md p-8 rounded-2xl shadow-2xl scale-95 transition-transform duration-300" id="modalContent">
+            <div class="flex flex-col items-center text-center">
+                <div class="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mb-6 shadow-xl">
+                    <span class="material-symbols-outlined text-white text-4xl" style="font-variation-settings: 'FILL' 1, 'wght' 600;">check_circle</span>
+                </div>
+                <h3 class="text-2xl font-bold text-on-surface mb-2">密钥分配成功</h3>
+                <p class="text-on-surface-variant mb-8">您的唯一分配密钥已生成并记录在您的工作区历史中。</p>
+                <div class="w-full bg-surface-container-high p-4 rounded-xl mb-8 flex items-center justify-between border border-outline-variant group">
+                    <span class="font-mono text-xl font-bold text-primary tracking-widest select-all" id="newlyGeneratedKey">-</span>
+                    <button onclick="copyToClipboard()" class="p-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-all active:scale-90">
+                        <span class="material-symbols-outlined" id="copyIcon">content_copy</span>
+                    </button>
+                </div>
+                <button onclick="closeSuccessModal()" class="w-full py-3 bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-bold rounded-xl transition-colors">
+                    返回工作区
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard-script.js"></script>
+    <script>
+        // 当前用户信息
+        let currentUser = null;
+        window.currentUser = currentUser; // 全局访问
+
+        // 页面加载时检查登录状态
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+            loadStats();
+            loadRecentHistory();
+        });
+
+        // 检查登录状态
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/current-user');
+                const data = await response.json();
+
+                if (!data.success) {
+                    window.location.href = '/login-new.html';
+                    return;
+                }
+
+                currentUser = data.user;
+                window.currentUser = currentUser; // 全局访问
+
+                // 显示用户信息
+                document.getElementById('userName').textContent = currentUser.username;
+                document.getElementById('userRole').textContent = currentUser.role === 'admin' ? '管理员' : '普通用户';
+
+                // 欢迎区域
+                document.getElementById('welcomeUserName').textContent = currentUser.username;
+                document.getElementById('welcomeUserRole').textContent = currentUser.role === 'admin' ? '系统管理员' : '标准用户';
+
+                // 显示配额信息
+                if (data.quota) {
+                    // 侧边栏配额
+                    const quotaInfo = document.getElementById('quotaInfo');
+                    quotaInfo.innerHTML = `
+                        📊 今日：${data.quota.dailyUsed}/${data.quota.dailyQuota} |
+                        本月：${data.quota.monthlyUsed}/${data.quota.monthlyQuota}
+                    `;
+
+                    // 顶部信息栏配额
+                    const remaining = data.quota.monthlyQuota - data.quota.monthlyUsed;
+                    document.getElementById('quotaRemaining').textContent = remaining;
+                    document.getElementById('quotaTotal').textContent = data.quota.monthlyQuota;
+
+                    // 极简页面配额
+                    document.getElementById('simpleQuotaRemaining').textContent = remaining;
+                    document.getElementById('simpleQuotaTotal').textContent = data.quota.monthlyQuota;
+                }
+
+                // 如果是管理员，显示管理面板
+                if (currentUser.role === 'admin') {
+                    document.getElementById('manageNav').style.display = 'flex';
+                } else {
+                    // 普通用户隐藏用户名搜索
+                    const usernameSearch = document.getElementById('historyUsernameSearch');
+                    if (usernameSearch) usernameSearch.parentElement.style.display = 'none';
+                    const exportBtn = document.getElementById('exportHistoryBtn');
+                    if (exportBtn) exportBtn.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('检查登录状态失败:', error);
+                window.location.href = '/login-new.html';
+            }
+        }
+
+        // 表单提交事件
+        document.getElementById('keyRequestForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            requestCDKey();
+        });
+
+        // 视图切换
+        function switchView(viewName) {
+            document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+            document.querySelectorAll('.nav-link').forEach(l => {
+                l.classList.remove('violet-gradient', 'text-white');
+                l.classList.add('text-on-surface-variant', 'hover:bg-surface-container-high');
+            });
+
+            document.getElementById(`${viewName}-view`).classList.remove('hidden');
+            event.target.closest('.nav-link').classList.add('violet-gradient', 'text-white');
+            event.target.closest('.nav-link').classList.remove('text-on-surface-variant', 'hover:bg-surface-container-high');
+
+            if (viewName === 'history') loadHistory();
+            if (viewName === 'manage') {
+                loadAllCDKeys();
+                loadUsers();
+            }
+        }
+    </script>
+</body>
+</html>

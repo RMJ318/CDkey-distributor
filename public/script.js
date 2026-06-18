@@ -14,7 +14,7 @@ async function checkAuth() {
         const data = await response.json();
 
         if (!data.success) {
-            window.location.href = '/login.html';
+            window.location.href = '/login-new.html';
             return;
         }
 
@@ -24,13 +24,28 @@ async function checkAuth() {
         document.getElementById('userName').textContent = currentUser.username;
         document.getElementById('userRole').textContent = currentUser.role === 'admin' ? '管理员' : '普通用户';
 
-        // 如果是管理员，显示管理面板
+        // 显示配额信息
+        if (data.quota) {
+            const quotaInfo = document.getElementById('quotaInfo');
+            quotaInfo.innerHTML = `
+                📊 今日：${data.quota.dailyUsed}/${data.quota.dailyQuota} |
+                本月：${data.quota.monthlyUsed}/${data.quota.monthlyQuota}
+            `;
+        }
+
+        // 如果是管理员，显示管理面板和用户名搜索
         if (currentUser.role === 'admin') {
             document.getElementById('manageTab').style.display = 'block';
+        } else {
+            // 普通用户隐藏用户名搜索和导出按钮
+            const usernameGroup = document.getElementById('historyUsernameSearchGroup');
+            if (usernameGroup) usernameGroup.style.display = 'none';
+            const exportBtn = document.getElementById('exportHistoryBtn');
+            if (exportBtn) exportBtn.style.display = 'none';
         }
     } catch (error) {
         console.error('检查登录状态失败:', error);
-        window.location.href = '/login.html';
+        window.location.href = '/login-new.html';
     }
 }
 
@@ -38,7 +53,7 @@ async function checkAuth() {
 async function logout() {
     try {
         await fetch('/api/logout', { method: 'POST' });
-        window.location.href = '/login.html';
+        window.location.href = '/login-new.html';
     } catch (error) {
         console.error('登出失败:', error);
         alert('登出失败');
@@ -60,9 +75,10 @@ function switchTab(tabName) {
         loadHistory();
     }
 
-    // 如果切换到管理面板，加载CDKey列表
+    // 如果切换到管理面板，加载CDKey列表和用户列表
     if (tabName === 'manage') {
         loadAllCDKeys();
+        loadUsers();
     }
 }
 
@@ -111,6 +127,7 @@ async function requestCDKey() {
             );
             document.getElementById('reason').value = '';
             loadStats(); // 刷新统计
+            checkAuth(); // 刷新配额信息
         } else {
             showResult(`❌ ${data.message}`, 'error');
         }
@@ -193,21 +210,35 @@ async function addBatchCDKeys() {
     }
 }
 
-// 加载请求历史
+// 加载请求历史（支持搜索过滤）
 async function loadHistory() {
     try {
-        const response = await fetch('/api/history?limit=50');
+        const cdkeySearch = document.getElementById('historyCdkeySearch').value;
+        const reasonSearch = document.getElementById('historyReasonSearch').value;
+        const usernameSearch = currentUser && currentUser.role === 'admin' ? document.getElementById('historyUsernameSearch').value : '';
+        const startDate = document.getElementById('historyStartDate').value;
+        const endDate = document.getElementById('historyEndDate').value;
+
+        let url = '/api/history?limit=50';
+        if (cdkeySearch) url += `&cdkeySearch=${encodeURIComponent(cdkeySearch)}`;
+        if (reasonSearch) url += `&reasonSearch=${encodeURIComponent(reasonSearch)}`;
+        if (usernameSearch) url += `&usernameSearch=${encodeURIComponent(usernameSearch)}`;
+        if (startDate) url += `&startDate=${startDate}`;
+        if (endDate) url += `&endDate=${endDate}`;
+
+        const response = await fetch(url);
         const history = await response.json();
 
         const historyList = document.getElementById('history-list');
 
         if (history.length === 0) {
-            historyList.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">暂无请求历史</p>';
+            historyList.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">没有找到匹配的请求历史</p>';
             return;
         }
 
         historyList.innerHTML = history.map(item => `
             <div class="history-item">
+                ${currentUser && currentUser.role === 'admin' && item.username ? `<div style="color: #667eea; font-weight: bold;">👤 ${item.username}</div>` : ''}
                 <div class="cdkey">🔑 ${item.cdkey_code}</div>
                 <div class="reason">📝 ${item.reason}</div>
                 <div class="time">⏰ ${formatDate(item.requested_at)}</div>
@@ -216,6 +247,126 @@ async function loadHistory() {
     } catch (error) {
         console.error('加载历史失败:', error);
         document.getElementById('history-list').innerHTML = '<p style="color: red;">加载失败</p>';
+    }
+}
+
+// 重置历史过滤器
+function resetHistoryFilters() {
+    document.getElementById('historyCdkeySearch').value = '';
+    document.getElementById('historyReasonSearch').value = '';
+    if (currentUser && currentUser.role === 'admin') {
+        document.getElementById('historyUsernameSearch').value = '';
+    }
+    document.getElementById('historyStartDate').value = '';
+    document.getElementById('historyEndDate').value = '';
+    loadHistory();
+}
+
+// 导出历史记录（仅管理员）
+async function exportHistory() {
+    if (!currentUser || currentUser.role !== 'admin') {
+        alert('仅管理员可以导出数据');
+        return;
+    }
+
+    const cdkeySearch = document.getElementById('historyCdkeySearch').value;
+    const reasonSearch = document.getElementById('historyReasonSearch').value;
+    const usernameSearch = document.getElementById('historyUsernameSearch').value;
+    const startDate = document.getElementById('historyStartDate').value;
+    const endDate = document.getElementById('historyEndDate').value;
+
+    let url = '/api/export/history?';
+    if (cdkeySearch) url += `&cdkeySearch=${encodeURIComponent(cdkeySearch)}`;
+    if (reasonSearch) url += `&reasonSearch=${encodeURIComponent(reasonSearch)}`;
+    if (usernameSearch) url += `&usernameSearch=${encodeURIComponent(usernameSearch)}`;
+    if (startDate) url += `&startDate=${startDate}`;
+    if (endDate) url += `&endDate=${endDate}`;
+
+    window.location.href = url;
+}
+
+// 加载用户列表（管理员）
+async function loadUsers() {
+    try {
+        const response = await fetch('/api/users');
+        const users = await response.json();
+
+        const listDiv = document.getElementById('user-list');
+
+        if (users.length === 0) {
+            listDiv.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">暂无用户</p>';
+            return;
+        }
+
+        listDiv.innerHTML = `
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f5f5f5;">
+                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">用户名</th>
+                        <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">角色</th>
+                        <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">每日配额</th>
+                        <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">每月配额</th>
+                        <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${users.map(user => `
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 12px; font-weight: bold;">${user.username}</td>
+                            <td style="padding: 12px; text-align: center;">
+                                <span style="padding: 4px 12px; background: ${user.role === 'admin' ? '#667eea' : '#999'}; color: white; border-radius: 12px; font-size: 0.85em;">
+                                    ${user.role === 'admin' ? '管理员' : '普通用户'}
+                                </span>
+                            </td>
+                            <td style="padding: 12px; text-align: center;">${user.daily_quota}</td>
+                            <td style="padding: 12px; text-align: center;">${user.monthly_quota}</td>
+                            <td style="padding: 12px; text-align: center;">
+                                <button onclick="editUserQuota(${user.id}, '${user.username}', ${user.daily_quota}, ${user.monthly_quota})"
+                                        class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.9em;">
+                                    编辑配额
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    } catch (error) {
+        console.error('加载用户列表失败:', error);
+    }
+}
+
+// 编辑用户配额
+async function editUserQuota(userId, username, currentDaily, currentMonthly) {
+    const dailyQuota = prompt(`设置用户 "${username}" 的每日配额:`, currentDaily);
+    if (dailyQuota === null) return;
+
+    const monthlyQuota = prompt(`设置用户 "${username}" 的每月配额:`, currentMonthly);
+    if (monthlyQuota === null) return;
+
+    try {
+        const response = await fetch(`/api/users/${userId}/quota`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                dailyQuota: parseInt(dailyQuota),
+                monthlyQuota: parseInt(monthlyQuota)
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert('✅ 配额更新成功');
+            loadUsers();
+        } else {
+            alert('❌ 更新失败: ' + data.message);
+        }
+    } catch (error) {
+        alert('❌ 更新失败，请检查服务器连接');
+        console.error('更新配额失败:', error);
     }
 }
 
@@ -270,16 +421,27 @@ function formatDate(dateString) {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-// 加载所有CDKey列表（管理员）
+// 加载所有CDKey列表（管理员，支持搜索过滤）
 async function loadAllCDKeys() {
     try {
-        const response = await fetch('/api/cdkeys?limit=100');
+        const codeSearch = document.getElementById('cdkeySearch').value;
+        const status = document.getElementById('statusFilter').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        let url = '/api/cdkeys?limit=100';
+        if (codeSearch) url += `&codeSearch=${encodeURIComponent(codeSearch)}`;
+        if (status) url += `&status=${status}`;
+        if (startDate) url += `&startDate=${startDate}`;
+        if (endDate) url += `&endDate=${endDate}`;
+
+        const response = await fetch(url);
         const cdkeys = await response.json();
 
         const listDiv = document.getElementById('cdkey-list');
 
         if (cdkeys.length === 0) {
-            listDiv.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">暂无CDKey</p>';
+            listDiv.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">没有找到匹配的CDKey</p>';
             return;
         }
 
@@ -314,6 +476,31 @@ async function loadAllCDKeys() {
     } catch (error) {
         console.error('加载CDKey列表失败:', error);
     }
+}
+
+// 重置CDKey过滤器
+function resetCDKeyFilters() {
+    document.getElementById('cdkeySearch').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    loadAllCDKeys();
+}
+
+// 导出CDKey数据
+async function exportCDKeys() {
+    const codeSearch = document.getElementById('cdkeySearch').value;
+    const status = document.getElementById('statusFilter').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    let url = '/api/export/cdkeys?';
+    if (codeSearch) url += `&codeSearch=${encodeURIComponent(codeSearch)}`;
+    if (status) url += `&status=${status}`;
+    if (startDate) url += `&startDate=${startDate}`;
+    if (endDate) url += `&endDate=${endDate}`;
+
+    window.location.href = url;
 }
 
 // 删除CDKey

@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Violet Distribution Hub - Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;900&amp;family=Courier+Prime:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-container": "#546cd7",
+                    "surface-dim": "#d4daea",
+                    "on-primary": "#ffffff",
+                    "surface-variant": "#dde2f3",
+                    "secondary-fixed-dim": "#dcb8ff",
+                    "on-tertiary-fixed-variant": "#663e00",
+                    "tertiary-container": "#a56600",
+                    "primary-fixed": "#dde1ff",
+                    "tertiary-fixed-dim": "#ffb964",
+                    "on-background": "#161c27",
+                    "surface-container-low": "#f1f3ff",
+                    "surface-container-highest": "#dde2f3",
+                    "on-tertiary-container": "#fffbff",
+                    "on-surface-variant": "#444653",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-high": "#e3e8f9",
+                    "on-surface": "#161c27",
+                    "primary-fixed-dim": "#b9c3ff",
+                    "outline-variant": "#c5c5d5",
+                    "on-error": "#ffffff",
+                    "on-primary-container": "#fffbff",
+                    "surface-bright": "#f9f9ff",
+                    "on-secondary-fixed-variant": "#5c3187",
+                    "surface": "#f9f9ff",
+                    "inverse-surface": "#2a303d",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-fixed": "#2b1700",
+                    "surface-tint": "#3c55bf",
+                    "secondary-container": "#ce9ffd",
+                    "secondary-fixed": "#f0dbff",
+                    "on-error-container": "#93000a",
+                    "inverse-on-surface": "#ecf0ff",
+                    "background": "#f9f9ff",
+                    "on-primary-fixed": "#001356",
+                    "outline": "#757684",
+                    "tertiary": "#835100",
+                    "on-secondary-fixed": "#2c0051",
+                    "tertiary-fixed": "#ffddb9",
+                    "inverse-primary": "#b9c3ff",
+                    "primary": "#3953bd",
+                    "error": "#ba1a1a",
+                    "error-container": "#ffdad6",
+                    "on-primary-fixed-variant": "#1f3ba6",
+                    "surface-container": "#e8eeff",
+                    "secondary": "#754aa1",
+                    "on-secondary-container": "#5a3086",
+                    "on-secondary": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "64px",
+                    "md": "24px",
+                    "gutter": "24px",
+                    "sm": "12px",
+                    "container-max": "1280px",
+                    "xs": "4px",
+                    "base": "8px",
+                    "lg": "40px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Hanken Grotesk"],
+                    "body-md": ["Hanken Grotesk"],
+                    "cdkey-display": ["Courier Prime"],
+                    "body-lg": ["Hanken Grotesk"],
+                    "label-sm": ["Hanken Grotesk"],
+                    "headline-lg": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "cdkey-display": ["16px", {"lineHeight": "1.2", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "label-sm": ["13px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav-gradient {
+            background: linear-gradient(to right, #667eea, #764ba2);
+        }
+        .text-brand-gradient {
+            background: linear-gradient(to right, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .soft-tech-shadow {
+            box-shadow: 0px 10px 15px -3px rgba(118, 75, 162, 0.1), 0px 4px 6px -2px rgba(118, 75, 162, 0.05);
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #dde2f3; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #c5c5d5; }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface antialiased overflow-x-hidden">
+<!-- SideNavBar -->
+<aside class="w-[240px] h-screen fixed left-0 top-0 bg-surface dark:bg-inverse-surface shadow-[0px_10px_15px_-3px_rgba(118,75,162,0.1)] flex flex-col gap-2 p-4 border-r border-outline-variant dark:border-outline z-50">
+<div class="mb-8 px-2">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary">Violet Protocol</h1>
+<p class="text-xs text-on-surface-variant font-semibold tracking-wider">ENTERPRISE DISTRIBUTION</p>
+</div>
+<nav class="flex-grow space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high transition-colors rounded-lg mx-2 my-1" href="#">
+<span class="material-symbols-outlined">add_box</span>
+<span class="font-medium">Request</span>
+</a>
+<!-- Active Tab: Manage -->
+<a class="flex items-center gap-3 px-4 py-3 active-nav-gradient text-white rounded-lg mx-2 my-1 shadow-sm" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span class="font-medium">Manage</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high transition-colors rounded-lg mx-2 my-1" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-medium">History</span>
+</a>
+</nav>
+<div class="mt-auto border-t border-outline-variant pt-4 flex flex-col gap-1">
+<button class="flex items-center gap-3 px-4 py-3 mb-4 active-nav-gradient text-white rounded-lg mx-2 transition-all duration-200 active:scale-95 shadow-md">
+<span class="material-symbols-outlined">key</span>
+<span class="font-bold">Generate Key</span>
+</button>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high transition-colors rounded-lg mx-2" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-medium">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high transition-colors rounded-lg mx-2" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-medium">Support</span>
+</a>
+</div>
+</aside>
+<!-- TopAppBar -->
+<header class="h-16 fixed top-0 right-0 left-[240px] bg-surface-bright dark:bg-surface-container-lowest border-b border-outline-variant dark:border-outline flex justify-between items-center px-gutter z-40">
+<div class="flex items-center flex-grow">
+<span class="font-headline-md text-headline-md font-black text-brand-gradient mr-8">Violet Distribution Hub</span>
+<div class="relative w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-full py-2 pl-10 pr-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm transition-all" placeholder="Search protocol logs or keys..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="relative text-on-surface-variant hover:bg-surface-container-high p-2 rounded-full transition-colors cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-high p-2 rounded-full transition-colors cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">shield_person</span>
+</button>
+<div class="flex items-center gap-3 ml-4 cursor-pointer">
+<div class="text-right hidden xl:block">
+<p class="text-sm font-bold text-on-surface leading-tight">Admin_Root</p>
+<p class="text-[11px] text-outline font-semibold tracking-tighter uppercase">System Operator</p>
+</div>
+<img class="w-10 h-10 rounded-full border-2 border-primary object-cover" data-alt="A hyper-realistic studio portrait of a professional system administrator, shot with soft volumetric lighting. The subject is a person in their late 30s with a focused, intelligent gaze, wearing a dark navy modern corporate blazer. The background is a clean, slightly out-of-focus server room with soft purple and blue ambient LED glows, maintaining a high-contrast corporate modern aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7CKCqY3NnjE56RC3KFG9z1LR7MUFUJTRIWku1On9EYqPxGX9bo7Jx6Pk0S2hI4IfAtZOD0KKRMScuPaM_jDqRlUyZ4_Z3mtSC5LwF6VwhME-88f6IP8GtM7FSInS9nOrPQaLstB-o6-sSKzG2Xl_YgN7OVzHB8OlB-59tHokuiyOGKwElDHnFZ-QUUP1lzMGUkAuZzzKNSTgQ6ghHsW1cz0-ZY4y8rH9URv7Su1OlEte_AAb5cE553I__xGsXsb9w1l49i_48_JVX"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-[240px] mt-16 p-gutter min-h-screen">
+<!-- Statistics Row -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter mb-gutter">
+<!-- Total Keys -->
+<div class="bg-surface-container-lowest p-6 rounded-xl soft-tech-shadow border border-outline-variant/30 flex items-start justify-between">
+<div>
+<p class="font-label-sm text-label-sm text-outline uppercase mb-1">Total CDKeys</p>
+<h3 class="font-headline-lg text-headline-lg text-primary">124,802</h3>
+<p class="text-xs text-secondary mt-2 flex items-center font-bold">
+<span class="material-symbols-outlined text-sm mr-1">trending_up</span> +12% from last week
+                    </p>
+</div>
+<div class="bg-primary/10 p-3 rounded-lg text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'opsz' 32;">database</span>
+</div>
+</div>
+<!-- Available -->
+<div class="bg-surface-container-lowest p-6 rounded-xl soft-tech-shadow border border-outline-variant/30 flex items-start justify-between">
+<div>
+<p class="font-label-sm text-label-sm text-outline uppercase mb-1">Available</p>
+<h3 class="font-headline-lg text-headline-lg text-tertiary">42,391</h3>
+<div class="mt-4 w-32 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-tertiary rounded-full" style="width: 34%"></div>
+</div>
+</div>
+<div class="bg-tertiary/10 p-3 rounded-lg text-tertiary">
+<span class="material-symbols-outlined">inventory</span>
+</div>
+</div>
+<!-- Used -->
+<div class="bg-surface-container-lowest p-6 rounded-xl soft-tech-shadow border border-outline-variant/30 flex items-start justify-between">
+<div>
+<p class="font-label-sm text-label-sm text-outline uppercase mb-1">Usage Rate</p>
+<h3 class="font-headline-lg text-headline-lg text-on-surface">66.1%</h3>
+<div class="mt-4 w-32 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full active-nav-gradient rounded-full" style="width: 66.1%"></div>
+</div>
+</div>
+<div class="bg-secondary/10 p-3 rounded-lg text-secondary">
+<span class="material-symbols-outlined">analytics</span>
+</div>
+</div>
+<!-- Pending -->
+<div class="bg-surface-container-lowest p-6 rounded-xl soft-tech-shadow border border-outline-variant/30 flex items-start justify-between relative overflow-hidden">
+
+<div class="relative z-10">
+<p class="font-label-sm text-label-sm text-outline uppercase mb-1">Pending Requests</p>
+<h3 class="font-headline-lg text-headline-lg text-error">158</h3>
+<p class="text-xs text-error mt-2 font-bold flex items-center">
+<span class="material-symbols-outlined text-sm mr-1">priority_high</span> Needs Attention
+                    </p>
+</div>
+<div class="bg-error/10 p-3 rounded-lg text-error relative z-10">
+<span class="material-symbols-outlined">pending_actions</span>
+</div>
+</div>
+</div>
+<!-- Management Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter mb-gutter">
+<!-- Left Column: Add CDKey -->
+<div class="lg:col-span-5 flex flex-col gap-gutter">
+<div class="bg-surface-container-lowest p-6 rounded-xl soft-tech-shadow border border-outline-variant/30">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary">add_circle</span>
+<h2 class="font-headline-md text-headline-md">Add CDKey</h2>
+</div>
+<form class="space-y-4">
+<div>
+<label class="block text-label-sm font-label-sm text-outline mb-2">Single Entry</label>
+<div class="flex gap-2">
+<input class="flex-grow font-cdkey-display text-cdkey-display bg-surface border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:opacity-30" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" type="text"/>
+<button class="active-nav-gradient text-white px-6 py-2 rounded-lg font-bold shadow-md hover:scale-[1.02] transition-transform active:scale-95" type="button">Add</button>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant">
+<label class="block text-label-sm font-label-sm text-outline mb-2">Batch Import (CSV or Newline)</label>
+<textarea class="w-full font-cdkey-display text-cdkey-display bg-surface border border-outline-variant rounded-lg p-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-xs placeholder:font-body-md" placeholder="Paste multiple keys here..." rows="6"></textarea>
+<div class="mt-4 flex justify-between items-center">
+<span class="text-[11px] text-outline font-semibold">Max 500 keys per batch</span>
+<button class="bg-white border border-primary text-primary px-6 py-2 rounded-lg font-bold hover:bg-primary-container/10 transition-colors" type="button">Process Batch</button>
+</div>
+</div>
+</form>
+</div>
+</div>
+<!-- Right Column: User Quota Management -->
+<div class="lg:col-span-7">
+<div class="bg-surface-container-lowest p-6 rounded-xl soft-tech-shadow border border-outline-variant/30 h-full">
+<div class="flex items-center justify-between mb-6">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">group</span>
+<h2 class="font-headline-md text-headline-md">User Quota Management</h2>
+</div>
+<button class="text-primary font-bold text-label-sm flex items-center gap-1 hover:underline">
+                            View All Users <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="border-b border-outline-variant">
+<th class="py-3 font-label-sm text-label-sm text-outline">USERNAME</th>
+<th class="py-3 font-label-sm text-label-sm text-outline">DAILY LIMIT</th>
+<th class="py-3 font-label-sm text-label-sm text-outline">MONTHLY</th>
+<th class="py-3 font-label-sm text-label-sm text-outline">USAGE STATUS</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container text-xs font-bold">JD</div>
+<span class="font-bold text-on-surface">j.doe_reseller</span>
+</div>
+</td>
+<td class="py-4 font-mono text-sm">50</td>
+<td class="py-4 font-mono text-sm">1,500</td>
+<td class="py-4">
+<div class="flex items-center gap-4">
+<div class="flex-grow h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 82%"></div>
+</div>
+<span class="text-xs font-bold text-outline">82%</span>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-tertiary-container flex items-center justify-center text-on-tertiary-container text-xs font-bold">SM</div>
+<span class="font-bold text-on-surface">s.miller_ent</span>
+</div>
+</td>
+<td class="py-4 font-mono text-sm">200</td>
+<td class="py-4 font-mono text-sm">5,000</td>
+<td class="py-4">
+<div class="flex items-center gap-4">
+<div class="flex-grow h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-tertiary rounded-full" style="width: 15%"></div>
+</div>
+<span class="text-xs font-bold text-outline">15%</span>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container text-xs font-bold">AK</div>
+<span class="font-bold text-on-surface">a.khan_dist</span>
+</div>
+</td>
+<td class="py-4 font-mono text-sm">1,000</td>
+<td class="py-4 font-mono text-sm">25,000</td>
+<td class="py-4">
+<div class="flex items-center gap-4">
+<div class="flex-grow h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full active-nav-gradient rounded-full" style="width: 45%"></div>
+</div>
+<span class="text-xs font-bold text-outline">45%</span>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<!-- CDKey Inventory Section -->
+<div class="bg-surface-container-lowest rounded-xl soft-tech-shadow border border-outline-variant/30 mb-gutter overflow-hidden">
+<!-- Filter Bar -->
+<div class="p-6 border-b border-outline-variant bg-surface-bright/50">
+<div class="flex flex-wrap items-center gap-4 justify-between">
+<div class="flex items-center gap-4 flex-grow max-w-4xl">
+<div class="relative flex-grow">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
+<input class="w-full bg-surface border border-outline-variant rounded-lg py-2 pl-9 pr-4 text-sm focus:ring-primary outline-none" placeholder="Filter by ID or Key..." type="text"/>
+</div>
+<select class="bg-surface border border-outline-variant rounded-lg py-2 pl-3 pr-8 text-sm focus:ring-primary outline-none">
+<option>Status: All</option>
+<option>Active</option>
+<option>Revoked</option>
+<option>Used</option>
+</select>
+<div class="flex items-center bg-surface border border-outline-variant rounded-lg px-3 py-2 gap-2">
+<span class="material-symbols-outlined text-outline text-sm">calendar_today</span>
+<input class="bg-transparent border-none p-0 text-sm outline-none w-48" placeholder="2023-10-01 - 2023-10-31" type="text"/>
+</div>
+<button class="active-nav-gradient text-white px-5 py-2 rounded-lg font-bold text-sm">Filter</button>
+</div>
+<button class="bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container-high px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-sm">download</span>
+                        Export CSV
+                    </button>
+</div>
+</div>
+<!-- Data Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left min-w-[1000px]">
+<thead class="bg-surface-container-low/50">
+<tr>
+<th class="px-6 py-4 font-label-sm text-label-sm text-outline">PROTOCOL ID</th>
+<th class="px-6 py-4 font-label-sm text-label-sm text-outline">CDKEY STRING</th>
+<th class="px-6 py-4 font-label-sm text-label-sm text-outline">STATUS</th>
+<th class="px-6 py-4 font-label-sm text-label-sm text-outline">CREATED TIME</th>
+<th class="px-6 py-4 font-label-sm text-label-sm text-outline text-right">ACTIONS</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<!-- Key Row 1 -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4 font-bold text-sm text-primary">VP-88219-X</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="bg-surface-variant/40 px-3 py-1.5 rounded font-cdkey-display text-cdkey-display border border-outline-variant/50">VLT-ABCD-9921-KF12</span>
+<button class="text-outline hover:text-primary transition-colors cursor-pointer active:scale-90" title="Click to Copy">
+<span class="material-symbols-outlined text-sm">content_copy</span>
+</button>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-[11px] font-black uppercase tracking-wider flex items-center gap-1 w-fit">
+<span class="w-1.5 h-1.5 rounded-full bg-green-600 animate-pulse"></span> Active
+                                </span>
+</td>
+<td class="px-6 py-4 text-xs font-semibold text-outline">Oct 24, 2023 · 14:22:01</td>
+<td class="px-6 py-4 text-right">
+<button class="p-2 text-outline hover:text-error hover:bg-error/10 rounded-lg transition-all">
+<span class="material-symbols-outlined text-lg">delete</span>
+</button>
+</td>
+</tr>
+<!-- Key Row 2 -->
+<tr class="hover:bg-primary/5 transition-colors group bg-primary/[0.02]">
+<td class="px-6 py-4 font-bold text-sm text-primary">VP-88220-X</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="bg-surface-variant/40 px-3 py-1.5 rounded font-cdkey-display text-cdkey-display border border-outline-variant/50">VLT-X99Z-0012-PPLA</span>
+<button class="text-outline hover:text-primary transition-colors cursor-pointer active:scale-90">
+<span class="material-symbols-outlined text-sm">content_copy</span>
+</button>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-3 py-1 rounded-full bg-error-container text-error text-[11px] font-black uppercase tracking-wider flex items-center gap-1 w-fit">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> Used
+                                </span>
+</td>
+<td class="px-6 py-4 text-xs font-semibold text-outline">Oct 24, 2023 · 13:05:44</td>
+<td class="px-6 py-4 text-right">
+<button class="p-2 text-outline hover:text-error hover:bg-error/10 rounded-lg transition-all">
+<span class="material-symbols-outlined text-lg">delete</span>
+</button>
+</td>
+</tr>
+<!-- Key Row 3 -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4 font-bold text-sm text-primary">VP-88221-X</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="bg-surface-variant/40 px-3 py-1.5 rounded font-cdkey-display text-cdkey-display border border-outline-variant/50">VLT-K82M-PLQ1-778X</span>
+<button class="text-outline hover:text-primary transition-colors cursor-pointer active:scale-90">
+<span class="material-symbols-outlined text-sm">content_copy</span>
+</button>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-[11px] font-black uppercase tracking-wider flex items-center gap-1 w-fit">
+<span class="w-1.5 h-1.5 rounded-full bg-green-600 animate-pulse"></span> Active
+                                </span>
+</td>
+<td class="px-6 py-4 text-xs font-semibold text-outline">Oct 24, 2023 · 12:59:12</td>
+<td class="px-6 py-4 text-right">
+<button class="p-2 text-outline hover:text-error hover:bg-error/10 rounded-lg transition-all">
+<span class="material-symbols-outlined text-lg">delete</span>
+</button>
+</td>
+</tr>
+<!-- Key Row 4 -->
+<tr class="hover:bg-primary/5 transition-colors group bg-primary/[0.02]">
+<td class="px-6 py-4 font-bold text-sm text-primary">VP-88222-X</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="bg-surface-variant/40 px-3 py-1.5 rounded font-cdkey-display text-cdkey-display border border-outline-variant/50">VLT-MM21-0988-WQWQ</span>
+<button class="text-outline hover:text-primary transition-colors cursor-pointer active:scale-90">
+<span class="material-symbols-outlined text-sm">content_copy</span>
+</button>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-[11px] font-black uppercase tracking-wider flex items-center gap-1 w-fit">
+<span class="w-1.5 h-1.5 rounded-full bg-orange-600"></span> Revoked
+                                </span>
+</td>
+<td class="px-6 py-4 text-xs font-semibold text-outline">Oct 23, 2023 · 09:30:00</td>
+<td class="px-6 py-4 text-right">
+<button class="p-2 text-outline hover:text-error hover:bg-error/10 rounded-lg transition-all">
+<span class="material-symbols-outlined text-lg">delete</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-6 py-4 flex items-center justify-between border-t border-outline-variant">
+<span class="text-xs font-semibold text-outline">Showing 1 to 25 of 124,802 entries</span>
+<div class="flex items-center gap-2">
+<button class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-high disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded-lg active-nav-gradient text-white text-xs font-bold shadow-sm">1</button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container-high text-xs font-bold transition-colors">2</button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container-high text-xs font-bold transition-colors">3</button>
+<span class="px-1 text-outline">...</span>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container-high text-xs font-bold transition-colors">4992</button>
+<button class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-high">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Danger Zone -->
+<section class="bg-[#fef9c3] rounded-xl border border-yellow-400/50 p-8 mb-xl">
+<div class="flex flex-col md:flex-row items-center gap-6 justify-between">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 bg-yellow-400 rounded-full flex items-center justify-center text-yellow-900 shadow-sm shrink-0">
+<span class="material-symbols-outlined" style="font-variation-settings: 'opsz' 32;">warning</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-yellow-900">Danger Zone</h2>
+<p class="text-yellow-800 text-sm max-w-2xl">Deleting all data is a destructive operation that will purge all protocol keys, logs, and user metadata from the system. This action cannot be undone.</p>
+</div>
+</div>
+<button class="bg-error text-white font-black px-8 py-3 rounded-xl shadow-lg hover:bg-red-700 hover:scale-[1.02] transition-all duration-200 active:scale-95 flex items-center gap-2" onclick="confirmDestruction()">
+<span class="material-symbols-outlined">delete_forever</span>
+                    Clear All Data
+                </button>
+</div>
+</section>
+</main>
+<script>
+        function confirmDestruction() {
+            const confirmed = confirm("WARNING: This will permanently delete all records in the Violet Protocol database. Are you absolutely sure?");
+            if (confirmed) {
+                alert("Protocol Destruction Initiated... (Simulated)");
+            }
+        }
+
+        // Search Bar Micro-interaction
+        const searchBar = document.querySelector('input[placeholder="Search protocol logs or keys..."]');
+        searchBar.addEventListener('focus', () => {
+            searchBar.parentElement.classList.add('scale-[1.02]');
+        });
+        searchBar.addEventListener('blur', () => {
+            searchBar.parentElement.classList.remove('scale-[1.02]');
+        });
+
+        // Key Copy Interaction
+        document.querySelectorAll('button[title="Click to Copy"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const icon = this.querySelector('span');
+                icon.innerText = 'check';
+                icon.classList.add('text-green-600');
+                setTimeout(() => {
+                    icon.innerText = 'content_copy';
+                    icon.classList.remove('text-green-600');
+                }, 2000);
+            });
+        });
+    </script>
+</body></html>

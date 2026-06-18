@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Violet Protocol - CDKey Distribution System Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;900&amp;family=Courier+Prime:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-container": "#546cd7",
+                    "surface-dim": "#d4daea",
+                    "on-primary": "#ffffff",
+                    "surface-variant": "#dde2f3",
+                    "secondary-fixed-dim": "#dcb8ff",
+                    "on-tertiary-fixed-variant": "#663e00",
+                    "tertiary-container": "#a56600",
+                    "primary-fixed": "#dde1ff",
+                    "tertiary-fixed-dim": "#ffb964",
+                    "on-background": "#161c27",
+                    "surface-container-low": "#f1f3ff",
+                    "surface-container-highest": "#dde2f3",
+                    "on-tertiary-container": "#fffbff",
+                    "on-surface-variant": "#444653",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-high": "#e3e8f9",
+                    "on-surface": "#161c27",
+                    "primary-fixed-dim": "#b9c3ff",
+                    "outline-variant": "#c5c5d5",
+                    "on-error": "#ffffff",
+                    "on-primary-container": "#fffbff",
+                    "surface-bright": "#f9f9ff",
+                    "on-secondary-fixed-variant": "#5c3187",
+                    "surface": "#f9f9ff",
+                    "inverse-surface": "#2a303d",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-fixed": "#2b1700",
+                    "surface-tint": "#3c55bf",
+                    "secondary-container": "#ce9ffd",
+                    "secondary-fixed": "#f0dbff",
+                    "on-error-container": "#93000a",
+                    "inverse-on-surface": "#ecf0ff",
+                    "background": "#f9f9ff",
+                    "on-primary-fixed": "#001356",
+                    "outline": "#757684",
+                    "tertiary": "#835100",
+                    "on-secondary-fixed": "#2c0051",
+                    "tertiary-fixed": "#ffddb9",
+                    "inverse-primary": "#b9c3ff",
+                    "primary": "#3953bd",
+                    "error": "#ba1a1a",
+                    "error-container": "#ffdad6",
+                    "on-primary-fixed-variant": "#1f3ba6",
+                    "surface-container": "#e8eeff",
+                    "secondary": "#754aa1",
+                    "on-secondary-container": "#5a3086",
+                    "on-secondary": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "64px",
+                    "md": "24px",
+                    "gutter": "24px",
+                    "sm": "12px",
+                    "container-max": "1280px",
+                    "xs": "4px",
+                    "base": "8px",
+                    "lg": "40px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Hanken Grotesk"],
+                    "body-md": ["Hanken Grotesk"],
+                    "cdkey-display": ["Courier Prime"],
+                    "body-lg": ["Hanken Grotesk"],
+                    "label-sm": ["Hanken Grotesk"],
+                    "headline-lg": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "cdkey-display": ["16px", {"lineHeight": "1.2", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "label-sm": ["13px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Hanken Grotesk', sans-serif;
+            background-color: #f9f9ff;
+            overflow-x: hidden;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .purple-gradient {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        .purple-gradient-text {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .soft-tech-shadow {
+            box-shadow: 0px 10px 15px -3px rgba(118, 75, 162, 0.1), 0px 4px 6px -2px rgba(118, 75, 162, 0.05);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        input:focus {
+            outline: none !important;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface flex items-center justify-center min-h-screen p-4 relative">
+<!-- Atmospheric Background Decoration -->
+<div class="absolute inset-0 overflow-hidden pointer-events-none">
+<div class="absolute -top-[10%] -left-[5%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px]"></div>
+<div class="absolute -bottom-[10%] -right-[5%] w-[40%] h-[40%] rounded-full bg-secondary/5 blur-[120px]"></div>
+</div>
+<div class="w-full max-w-[480px] relative z-10 flex flex-col gap-base">
+<!-- Login Card -->
+<main class="glass-card rounded-xl soft-tech-shadow p-lg flex flex-col items-center">
+<!-- Brand Identity -->
+<div class="flex flex-col items-center gap-base mb-lg text-center">
+<div class="w-16 h-16 rounded-xl purple-gradient flex items-center justify-center shadow-lg transform transition-transform hover:scale-105 duration-300">
+<span class="material-symbols-outlined text-white text-[40px]" data-icon="add_box">add_box</span>
+</div>
+<div>
+<h1 class="font-headline-lg text-headline-lg purple-gradient-text">CDKey分配系统</h1>
+<p class="font-body-md text-on-surface-variant mt-xs">Violet Protocol Enterprise Distribution</p>
+</div>
+</div>
+<!-- Login Form -->
+<form class="w-full flex flex-col gap-md">
+<!-- Username Field -->
+<div class="flex flex-col gap-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant ml-1">用户名</label>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors" data-icon="person">person</span>
+<input class="w-full h-12 pl-10 pr-4 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md transition-all placeholder:text-outline focus:border-primary" placeholder="请输入您的用户名" type="text"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="flex flex-col gap-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant ml-1">密码</label>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors" data-icon="lock">lock</span>
+<input class="w-full h-12 pl-10 pr-4 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md transition-all placeholder:text-outline focus:border-primary" placeholder="请输入您的密码" type="password"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors" type="button">
+<span class="material-symbols-outlined" data-icon="visibility">visibility</span>
+</button>
+</div>
+</div>
+<!-- Remember & Forgot -->
+<div class="flex items-center justify-between mt-xs">
+<label class="flex items-center gap-xs cursor-pointer group">
+<div class="relative flex items-center">
+<input class="peer appearance-none w-5 h-5 border-2 border-outline-variant rounded transition-all checked:bg-primary checked:border-primary cursor-pointer" type="checkbox"/>
+<span class="material-symbols-outlined absolute text-white scale-0 peer-checked:scale-75 transition-transform" data-icon="check">check</span>
+</div>
+<span class="font-label-sm text-on-surface-variant group-hover:text-on-surface transition-colors">记住我</span>
+</label>
+<a class="font-label-sm text-primary hover:underline transition-all" href="#">忘记密码？</a>
+</div>
+<!-- Login Button -->
+<button class="purple-gradient text-white h-14 rounded-lg font-headline-md text-headline-md mt-md shadow-lg transform active:scale-[0.98] hover:translate-y-[-2px] transition-all duration-200 flex items-center justify-center gap-sm" type="submit">
+                    立即登录
+                    <span class="material-symbols-outlined" data-icon="login">login</span>
+</button>
+</form>
+</main>
+<!-- Test Credentials Section -->
+<section class="mt-md bg-surface-container-low rounded-lg p-md border border-outline-variant/30">
+<h3 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]" data-icon="info">info</span>
+                测试凭据
+            </h3>
+<div class="grid grid-cols-2 gap-md">
+<!-- Admin Cred -->
+<div class="bg-surface-container-lowest p-sm rounded border border-outline-variant flex flex-col gap-xs">
+<span class="font-label-sm text-primary uppercase text-[11px]">管理员账号</span>
+<div class="flex flex-col">
+<code class="font-cdkey-display text-cdkey-display text-on-surface">admin</code>
+<code class="font-cdkey-display text-cdkey-display text-on-surface-variant/70 text-sm">violet_admin2024</code>
+</div>
+</div>
+<!-- User Cred -->
+<div class="bg-surface-container-lowest p-sm rounded border border-outline-variant flex flex-col gap-xs">
+<span class="font-label-sm text-secondary uppercase text-[11px]">普通用户</span>
+<div class="flex flex-col">
+<code class="font-cdkey-display text-cdkey-display text-on-surface">operator</code>
+<code class="font-cdkey-display text-cdkey-display text-on-surface-variant/70 text-sm">violet_user88</code>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="mt-xl text-center flex flex-col gap-xs">
+<div class="flex items-center justify-center gap-sm text-on-surface-variant opacity-60">
+<span class="font-label-sm">© 2024 Violet Protocol Distribution. All rights reserved.</span>
+</div>
+<div class="flex items-center justify-center gap-sm">
+<span class="px-2 py-0.5 rounded bg-surface-container-highest font-label-sm text-on-surface-variant text-[11px] uppercase tracking-widest">Enterprise Edition</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="font-label-sm text-on-surface-variant text-[11px] uppercase tracking-widest">v2.4.0-stable</span>
+</div>
+</footer>
+</div>
+<!-- Micro-interaction Script -->
+<script>
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.classList.add('ring-2', 'ring-primary/20');
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.classList.remove('ring-2', 'ring-primary/20');
+            });
+        });
+
+        const loginBtn = document.querySelector('button[type="submit"]');
+        loginBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                正在验证...
+            `;
+            setTimeout(() => {
+                loginBtn.innerHTML = `立即登录 <span class="material-symbols-outlined" data-icon="login">login</span>`;
+            }, 2000);
+        });
+    </script>
+</body></html>
