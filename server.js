@@ -209,6 +209,21 @@ app.delete('/api/cdkey/:id', requireAdmin, (req, res) => {
   res.json(result);
 });
 
+// 批量删除CDKey（需要管理员权限）
+app.post('/api/cdkeys/batch-delete', requireAdmin, (req, res) => {
+  const { ids } = req.body;
+
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: '请提供要删除的CDKey ID列表'
+    });
+  }
+
+  const result = db.batchDeleteCDKeys(ids);
+  res.json(result);
+});
+
 // 获取所有用户（需要管理员权限）
 app.get('/api/users', requireAdmin, (req, res) => {
   const users = db.getAllUsers();
@@ -295,6 +310,64 @@ app.get('/api/export/history', requireAdmin, (req, res) => {
 app.post('/api/clear-all', requireAdmin, (req, res) => {
   const result = db.clearAllData();
   res.json(result);
+});
+
+// ==================== 数据分析API ====================
+
+// 获取时间序列数据
+app.get('/api/analytics/timeseries', requireAdmin, (req, res) => {
+  const days = parseInt(req.query.days) || 30;
+  const data = db.getTimeSeriesData(days);
+  res.json(data);
+});
+
+// 获取用户请求排行
+app.get('/api/analytics/users/ranking', requireAdmin, (req, res) => {
+  const limit = parseInt(req.query.limit) || 10;
+  const data = db.getUserRequestRanking(limit);
+  res.json(data);
+});
+
+// 获取请求时段分布
+app.get('/api/analytics/hourly', requireAdmin, (req, res) => {
+  const data = db.getHourlyDistribution();
+  res.json(data);
+});
+
+// 获取CDKey生命周期
+app.get('/api/analytics/lifecycle', requireAdmin, (req, res) => {
+  const data = db.getCDKeyLifecycle();
+  res.json(data);
+});
+
+// 获取星期分布
+app.get('/api/analytics/weekday', requireAdmin, (req, res) => {
+  const data = db.getWeekdayDistribution();
+  res.json(data);
+});
+
+// 获取库存健康度
+app.get('/api/analytics/health', requireAdmin, (req, res) => {
+  const data = db.getInventoryHealth();
+  res.json(data);
+});
+
+// 获取异常用户列表
+app.get('/api/analytics/anomalous-users', requireAdmin, (req, res) => {
+  const data = db.getAnomalousUsers();
+  res.json(data);
+});
+
+// 获取用户活跃度统计
+app.get('/api/analytics/user-activity', requireAdmin, (req, res) => {
+  const data = db.getUserActivityStats();
+  res.json(data);
+});
+
+// 获取智能洞察
+app.get('/api/analytics/insights', requireAdmin, (req, res) => {
+  const data = db.generateInsights();
+  res.json(data);
 });
 
 // 启动服务器

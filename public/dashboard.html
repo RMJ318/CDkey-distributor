@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Violet Protocol - CDKey分配系统</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;900&family=Courier+Prime:wght@700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <script>
@@ -79,6 +80,10 @@
             <a onclick="switchView('history')" class="nav-link text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 flex items-center gap-3 p-3 rounded-lg transition-colors duration-200 active:scale-95 cursor-pointer">
                 <span class="material-symbols-outlined">history</span>
                 <span>请求历史</span>
+            </a>
+            <a onclick="switchView('analytics')" class="nav-link text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 flex items-center gap-3 p-3 rounded-lg transition-colors duration-200 active:scale-95 cursor-pointer" id="analyticsNav" style="display:none;">
+                <span class="material-symbols-outlined">analytics</span>
+                <span>数据分析</span>
             </a>
         </nav>
 
@@ -314,6 +319,9 @@
                     <button onclick="applyCDKeyFilters()" class="px-4 py-2 bg-primary text-white rounded-lg text-sm">应用过滤</button>
                     <button onclick="resetCDKeyFilters()" class="px-4 py-2 bg-surface-container text-on-surface rounded-lg text-sm">重置</button>
                     <button onclick="exportCDKeys()" class="px-4 py-2 bg-surface-container text-on-surface rounded-lg text-sm">📥 导出CSV</button>
+                    <div class="flex-1"></div>
+                    <button id="batchCopyBtn" onclick="batchCopyCDKeys()" disabled class="px-4 py-2 bg-gray-300 text-gray-500 rounded-lg text-sm cursor-not-allowed">批量复制</button>
+                    <button id="batchDeleteBtn" onclick="batchDeleteCDKeys()" disabled class="px-4 py-2 bg-gray-300 text-gray-500 rounded-lg text-sm cursor-not-allowed">批量删除</button>
                 </div>
                 <div class="flex items-center justify-between gap-4 mb-4 flex-wrap">
                     <div class="flex items-center gap-2 text-sm text-on-surface-variant">
@@ -368,6 +376,191 @@
                 </div>
 
                 <div id="history-list" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <!-- Analytics View (Admin Only) -->
+        <div id="analytics-view" class="view hidden">
+            <!-- Header with Time Range Selector -->
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-3xl font-bold text-on-surface flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary text-4xl">analytics</span>
+                    数据分析
+                </h2>
+                <div class="flex items-center gap-3">
+                    <select id="timeRangeSelector" onchange="loadAnalytics()" class="h-10 px-4 bg-white border-2 border-outline-variant rounded-lg text-sm font-semibold">
+                        <option value="7">近7天</option>
+                        <option value="30" selected>近30天</option>
+                        <option value="90">近90天</option>
+                    </select>
+                    <button onclick="loadAnalytics()" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-container transition-colors flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px]">refresh</span>
+                        刷新数据
+                    </button>
+                </div>
+            </div>
+
+            <!-- Left Column: Insights + Health -->
+            <div class="grid grid-cols-3 gap-6 mb-6">
+                <!-- Left: Combined Insights and Health -->
+                <div class="space-y-6">
+                    <!-- AI Insights Card -->
+                    <div class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-xl p-5 border-2 border-purple-200 shadow-sm">
+                        <h3 class="text-md font-bold text-on-surface mb-3 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-purple-600 text-[24px]">psychology</span>
+                            智能洞察
+                        </h3>
+                        <div id="insightsContainer" class="space-y-2">
+                            <div class="text-center text-on-surface-variant py-3 text-sm">加载中...</div>
+                        </div>
+                    </div>
+
+                    <!-- Inventory Health Dashboard -->
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-outline-variant">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-md font-bold text-on-surface flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-[24px]">inventory</span>
+                                库存健康度
+                            </h3>
+                            <span id="healthStatusBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-green-500 text-white">健康</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div class="text-center p-3 bg-surface-container-lowest rounded-lg">
+                                <div class="text-xs text-on-surface-variant mb-1">当前库存</div>
+                                <div class="text-2xl font-bold text-blue-600" id="healthCurrentStock">-</div>
+                            </div>
+                            <div class="text-center p-3 bg-surface-container-lowest rounded-lg">
+                                <div class="text-xs text-on-surface-variant mb-1">日均消耗</div>
+                                <div class="text-2xl font-bold text-orange-600" id="healthDailyConsumption">-</div>
+                            </div>
+                            <div class="text-center p-3 bg-surface-container-lowest rounded-lg">
+                                <div class="text-xs text-on-surface-variant mb-1">可支撑天数</div>
+                                <div class="text-2xl font-bold text-green-600"><span id="healthDaysLeft">-</span><span class="text-sm ml-1">天</span></div>
+                            </div>
+                            <div class="text-center p-3 bg-surface-container-lowest rounded-lg">
+                                <div class="text-xs text-on-surface-variant mb-1">建议补充</div>
+                                <div class="text-2xl font-bold text-purple-600" id="healthSuggestedAmount">-</div>
+                            </div>
+                        </div>
+
+                        <div class="relative">
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="text-xs text-on-surface-variant">健康度</div>
+                                <div class="flex-1"></div>
+                                <div class="text-xs text-on-surface-variant">目标: 60天</div>
+                            </div>
+                            <div class="h-2 bg-surface-container-high rounded-full overflow-hidden">
+                                <div id="healthProgressBar" class="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                            <div class="text-right mt-1">
+                                <span class="text-xs font-bold text-on-surface" id="healthPercentage">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Combined Trend Chart with Tabs -->
+                <div class="col-span-2 bg-white rounded-xl shadow-sm border border-outline-variant p-5">
+                    <!-- Tab Header -->
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-1 bg-surface-container-lowest rounded-lg p-1">
+                            <button onclick="switchTrendTab('inventory')" id="inventoryTabBtn" class="px-4 py-2 rounded-md text-sm font-semibold bg-primary text-white transition-all">
+                                库存趋势
+                            </button>
+                            <button onclick="switchTrendTab('request')" id="requestTabBtn" class="px-4 py-2 rounded-md text-sm font-semibold text-on-surface-variant hover:bg-surface-container transition-all">
+                                请求量趋势
+                            </button>
+                        </div>
+                        <span class="material-symbols-outlined text-primary text-[24px]" id="trendTabIcon">show_chart</span>
+                    </div>
+
+                    <!-- Tab Content -->
+                    <div id="inventoryTrendContent">
+                        <div id="trendChart" style="width: 100%; height: 420px;"></div>
+                    </div>
+                    <div id="requestTrendContent" class="hidden">
+                        <div id="requestChart" style="width: 100%; height: 420px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Anomalous Users Detection -->
+            <div class="bg-white rounded-xl shadow-sm border border-outline-variant p-6 mb-6" id="anomalousUsersCard">
+                <h3 class="text-lg font-bold text-on-surface mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-red-600">warning</span>
+                    异常用户检测（近7天）
+                </h3>
+                <div id="anomalousUsersContent">
+                    <div class="text-center text-on-surface-variant py-4">加载中...</div>
+                </div>
+            </div>
+
+            <!-- User Analysis Row -->
+            <div class="grid grid-cols-2 gap-6 mb-6">
+                <div class="bg-white rounded-xl shadow-sm border border-outline-variant p-6">
+                    <h3 class="text-lg font-bold text-on-surface mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">leaderboard</span>
+                        用户请求TOP10
+                    </h3>
+                    <div id="userRankingChart" style="width: 100%; height: 350px;"></div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-outline-variant p-6">
+                    <h3 class="text-lg font-bold text-on-surface mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">group</span>
+                        用户活跃度
+                    </h3>
+                    <div id="activityStatsContainer" class="mb-4">
+                        <div class="grid grid-cols-3 gap-4 mb-4">
+                            <div class="text-center p-3 bg-surface-container-lowest rounded-lg">
+                                <div class="text-2xl font-bold text-primary" id="activityThisWeek">-</div>
+                                <div class="text-xs text-on-surface-variant">本周活跃</div>
+                            </div>
+                            <div class="text-center p-3 bg-surface-container-lowest rounded-lg">
+                                <div class="text-2xl font-bold text-secondary" id="activityThisMonth">-</div>
+                                <div class="text-xs text-on-surface-variant">本月活跃</div>
+                            </div>
+                            <div class="text-center p-3 bg-surface-container-lowest rounded-lg">
+                                <div class="text-2xl font-bold text-outline" id="activityTotal">-</div>
+                                <div class="text-xs text-on-surface-variant">总用户</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-on-surface-variant">活跃率</span>
+                            <span class="text-sm font-bold text-on-surface"><span id="activityRate">0</span>%</span>
+                        </div>
+                        <div class="h-2 bg-surface-container-high rounded-full overflow-hidden">
+                            <div id="activityRateBar" class="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                        <div class="text-sm text-on-surface-variant mt-2">
+                            较上周 <span id="activityGrowth" class="font-bold">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collapsible Section: Usage Patterns -->
+            <div class="bg-white rounded-xl shadow-sm border border-outline-variant overflow-hidden mb-6">
+                <div class="p-4 flex items-center justify-between cursor-pointer hover:bg-surface-container-low transition-colors" onclick="toggleUsagePatterns()">
+                    <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-on-surface-variant">insights</span>
+                        使用规律分析
+                    </h3>
+                    <span class="material-symbols-outlined text-on-surface-variant transition-transform" id="usagePatternsIcon">expand_more</span>
+                </div>
+                <div id="usagePatternsContent" class="hidden border-t border-outline-variant">
+                    <div class="grid grid-cols-2 gap-6 p-6">
+                        <div>
+                            <h4 class="text-md font-semibold text-on-surface mb-3">请求时段分布</h4>
+                            <div id="hourlyChart" style="width: 100%; height: 250px;"></div>
+                        </div>
+                        <div>
+                            <h4 class="text-md font-semibold text-on-surface mb-3">星期分布</h4>
+                            <div id="weekdayChart" style="width: 100%; height: 250px;"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -447,6 +640,7 @@
                 // 如果是管理员，显示管理面板
                 if (currentUser.role === 'admin') {
                     document.getElementById('manageNav').style.display = 'flex';
+                    document.getElementById('analyticsNav').style.display = 'flex';
                 } else {
                     // 普通用户隐藏用户名搜索
                     const usernameSearch = document.getElementById('historyUsernameSearch');
@@ -504,6 +698,9 @@
             if (viewName === 'manage') {
                 loadAllCDKeys();
                 loadUsers();
+            }
+            if (viewName === 'analytics') {
+                loadAnalytics();
             }
         }
     </script>
